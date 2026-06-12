@@ -178,3 +178,62 @@ s'exécute sans modification (champs nouveaux = valeurs par défaut).
 3. **Notifications/tray** via Qt natif (pas de dépendance supplémentaire).
 4. **Profils** stockés en sous-dossiers JSON du dossier de données.
 5. **i18n** par dictionnaire interne FR/EN (plus simple et testable que les `.qm`).
+
+---
+
+## 8. UX no-code v3 — « façon n8n » & configuration concrète des actions
+
+> **Principe directeur : rien ne doit être abstrait.** Partout où l'utilisateur
+> doit fournir une information, le champ texte « nu » est remplacé par le
+> composant le plus concret possible (capture de touche, liste des fenêtres
+> ouvertes, navigateur d'applications, sélecteur de position/région/pixel,
+> sélecteur de couleur, etc.). Objectif : une expérience accessible à un
+> utilisateur **non technique**, dans l'esprit de **n8n**.
+
+### 8.1 Axes
+
+1. **Configuration concrète des actions** (Phase 1 — prioritaire).
+2. **Galerie de modèles** riche, catégorisée, cherchable (Phase 2).
+3. **Expérience no-code n8n** : palette, vue en nœuds, onboarding/assistant (Phase 3).
+
+### 8.2 Choix techniques
+
+| Besoin | Choix | Justification |
+|---|---|---|
+| Types de champ concrets | extension de `ParamSpec` (`key`, `hotkey`, `window`, `app`, `color`, `variable`, `folder`, `workflow` + `placeholder`, `supports_vars`, `depends_on`) | rétro-compatible : les anciens types restent valides, un type inconnu retombe sur un champ texte |
+| Services sous-jacents | nouveau paquet `autoflow/services/` (énum. fenêtres, détection apps, capture touches, exécuteur « tester ») | **mockables et testés sans écran** (imports paresseux) |
+| Widgets guidés | `ParamPanel` reçoit des *providers* optionnels (fenêtres, apps, variables, workflows, test-runner) | `ParamPanel()` sans argument reste valide (compat tests) |
+| Boutons de capture | position / région / pixel injectés au niveau du panneau selon les noms de paramètres | aucune modification du modèle de données |
+| Galerie de modèles | JSON dans `examples/templates/` + module `core/templates.py` (métadonnées `category`/`icon`) | format workflow inchangé ; `ensure_examples` conserve son comportement (2 exemples racine) |
+| Vue en nœuds | `QGraphicsView` — flux vertical structuré (cartes arrondies, connecteurs, branches Alors/Sinon, boutons « + ») | n8n-like, lisible ; **conserve le modèle structuré existant** (pas de graphe libre) |
+| Onboarding | écran d'accueil au 1er lancement + assistant (wizard) | guidage pas-à-pas + accès galerie |
+
+### 8.3 Compatibilité ascendante (garantie, testée)
+
+- `ParamSpec` gagne des champs **optionnels** → tout schéma existant reste valide.
+- Les nouveaux types de champ ont un **repli** sur champ texte/`str`.
+- Le format JSON des workflows est **inchangé** (les modèles ajoutent seulement
+  des clés de métadonnées ignorées par `Workflow.from_dict`).
+- Un test dédié charge un **ancien workflow « plat »** et vérifie son exécution.
+
+### 8.4 Phases & Definition of Done
+
+- **Phase 1** : composants concrets §3 + services §4, testés. ✅ cœur non négociable.
+- **Phase 2** : galerie de modèles (~15+), vue galerie cherchable, « Utiliser ce modèle ».
+- **Phase 3** : palette cherchable + vue en nœuds + onboarding/assistant.
+
+DoD : chaque catégorie d'action configurable via composants concrets ; galerie
+riche fonctionnelle ; expérience no-code lisible par un non-technicien ; compat.
+ascendante vérifiée par test ; `pytest` vert + smoke GUI offscreen ; commits
+atomiques poussés ; rapport final.
+
+### 8.5 Hypothèses v3
+
+1. **Capture de touches/fenêtres en direct** nécessite un affichage : la *logique*
+   (mapping touches, énumération) est isolée dans `services/` et testée par mock ;
+   les widgets ne sont que des smoke tests offscreen.
+2. **Détection des applications** : sous Windows, scan des raccourcis du menu
+   Démarrer + chemins courants ; hors Windows, repli sur quelques exécutables du
+   `PATH`. Fonction paramétrable (racines injectables) pour les tests.
+3. **Vue en nœuds** : disposition en **flux vertical** (pas un graphe libre
+   arbitraire), pour rester lisible et cohérente avec le modèle de données.

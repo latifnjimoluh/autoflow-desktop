@@ -212,6 +212,63 @@ pip install pyinstaller
   chargent et s'exécutent sans modification (vérifié par un test dédié).
 - L'automatisation réelle nécessite **Windows avec affichage**.
 
+## 🎨 Expérience no-code v3 — « façon n8n »
+
+AutoFlow v3 rend l'application **réellement accessible à n'importe qui**, même
+sans aucune connaissance technique. Le principe directeur : **rien n'est
+abstrait** — chaque réglage devient concret, guidé et précis.
+
+### Configuration concrète des actions (plus de champ « nu »)
+
+À chaque endroit où vous fournissez une information, AutoFlow propose le
+composant **le plus concret possible** :
+
+- **Clavier** — *Appui touche* : bouton **« ⌨ Capturer »** qui enregistre la
+  vraie touche que vous pressez, **plus** une liste cherchable de toutes les
+  touches (lettres, chiffres, F1–F24, flèches, média…). *Raccourci* : capture de
+  la combinaison réelle (« Ctrl + Maj + S » affiché en clair) ou interrupteurs de
+  modificateurs + touche finale. *Taper du texte* : insertion de variables
+  `{{…}}` d'un clic, et option « coller d'un coup ».
+- **Souris** — choix **« position actuelle »** ou **« coordonnées précises »**
+  avec bouton **« 📍 Capturer une position »** (la position s'affiche en direct).
+  Boutons de souris en liste, capture de **départ/arrivée** pour le glisser.
+- **Fenêtres** — **liste déroulante des fenêtres ouvertes** (rafraîchissable),
+  plus un motif manuel pour les fenêtres pas encore ouvertes. *Lancer une
+  application* : **applications installées** (menu Démarrer) / **parcourir** /
+  saisie manuelle.
+- **Système** — constructeur de commande clair : dossier de travail, capture de
+  la sortie dans une **variable**, délai max.
+- **Contrôle** — constructeur de **condition** dont les champs s'adaptent au type
+  de test choisi ; boucles guidées avec garde-fou.
+- **Écran** — sélecteur de couleur visuel, bouton **« 🎨 Capturer un pixel »**,
+  capture de **région**.
+
+Chaque action affiche une **aide en langage simple**, des **exemples** en
+filigrane, un **résumé en langage naturel** (« Clic gauche à la position
+(120, 340) ») et un bouton **« ▶ Tester cette action »** pour voir le résultat
+immédiatement.
+
+### Galerie de modèles
+
+Un bouton **« 📚 Galerie de modèles »** ouvre une galerie **catégorisée et
+cherchable** de plus de **15 modèles prêts à l'emploi** (maintien d'activité,
+terminal/dev, productivité, automatisation répétitive, surveillance,
+média/présentation). **« Utiliser ce modèle »** le clone dans vos workflows,
+prêt à éditer.
+
+### Vue en nœuds + assistant
+
+- **Vue en nœuds** (bouton **« 🔗 Schéma »**) : le workflow s'affiche comme un
+  enchaînement de **cartes** reliées, avec branches *Alors / Sinon*, boutons
+  **« + »** d'insertion et **pan/zoom**. Bascule **Liste ⇄ Nœuds** à tout moment.
+- **Palette d'actions** cherchable, regroupée par catégorie.
+- **Écran d'accueil** au premier lancement + **assistant** guidé (bouton
+  **« 🧭 Assistant »**) pour construire un premier workflow pas à pas.
+
+> **Compatibilité ascendante** : le format JSON des workflows est inchangé ; les
+> anciens workflows « plats » se chargent et s'exécutent sans modification
+> (vérifié par un test dédié).
+
 ## Licence
 
 Distribué sous licence **MIT** — voir [LICENSE](LICENSE).
