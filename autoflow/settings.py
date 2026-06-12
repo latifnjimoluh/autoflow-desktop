@@ -22,6 +22,7 @@ _DEFAULTS = {
     "autostart": False,
     "minimize_to_tray": True,
     "active_profile": "Défaut",
+    "onboarded": False,
 }
 
 
@@ -39,6 +40,7 @@ class Settings:
     autostart: bool = False
     minimize_to_tray: bool = True
     active_profile: str = "Défaut"
+    onboarded: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """Sérialise les réglages."""

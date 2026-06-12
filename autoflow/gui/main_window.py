@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
+    QHBoxLayout,
     QInputDialog,
     QLabel,
     QLineEdit,
@@ -95,9 +96,10 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self.workflow_panel = WorkflowListPanel()
         self.action_panel = ActionEditorPanel()
+        self.center_widget = self._build_center_panel()
         self.right_tabs = self._build_right_panel()
         splitter.addWidget(self.workflow_panel)
-        splitter.addWidget(self.action_panel)
+        splitter.addWidget(self.center_widget)
         splitter.addWidget(self.right_tabs)
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 3)
@@ -116,9 +118,81 @@ class MainWindow(QMainWindow):
         self.statusBar().addWidget(self.var_label, 1)
         self.statusBar().addPermanentWidget(self.iter_label)
 
+    def _build_center_panel(self) -> QWidget:
+        """Zone centrale : bascule entre vue Liste et vue Nœuds (n8n)."""
+        from PySide6.QtWidgets import QButtonGroup, QPushButton, QStackedWidget
+
+        from .node_view import NodeView
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        switch = QHBoxLayout()
+        self._btn_list_view = QPushButton("≣ Liste")
+        self._btn_node_view = QPushButton("🔗 Schéma (nœuds)")
+        for btn in (self._btn_list_view, self._btn_node_view):
+            btn.setCheckable(True)
+        self._btn_list_view.setChecked(True)
+        group = QButtonGroup(container)
+        group.setExclusive(True)
+        group.addButton(self._btn_list_view)
+        group.addButton(self._btn_node_view)
+        switch.addWidget(self._btn_list_view)
+        switch.addWidget(self._btn_node_view)
+        switch.addStretch(1)
+        layout.addLayout(switch)
+
+        self._views = QStackedWidget()
+        self.node_view = NodeView()
+        self._views.addWidget(self.action_panel)   # index 0 : liste
+        self._views.addWidget(self.node_view)       # index 1 : nœuds
+        layout.addWidget(self._views)
+
+        self._btn_list_view.clicked.connect(lambda: self._set_view(0))
+        self._btn_node_view.clicked.connect(lambda: self._set_view(1))
+
+        self.node_view.action_selected.connect(self._on_node_selected)
+        self.node_view.edit_requested.connect(self._on_node_selected)
+        self.node_view.insert_requested.connect(self._on_node_insert)
+        return container
+
+    def _set_view(self, index: int) -> None:
+        """Bascule entre la vue Liste (0) et la vue Nœuds (1)."""
+        self._views.setCurrentIndex(index)
+        if index == 1:
+            self._refresh_node_view()
+
+    def _refresh_node_view(self) -> None:
+        wf = self._current()
+        if wf is not None:
+            self.node_view.set_actions(wf.actions, self.action_panel.current_row())
+
+    def _on_node_selected(self, index: int) -> None:
+        """Sélectionne une action depuis la vue en nœuds et l'édite."""
+        wf = self._current()
+        if wf is None or not (0 <= index < len(wf.actions)):
+            return
+        self.action_panel.list.setCurrentRow(index)
+        self._select_action(index)
+        self.right_tabs.setCurrentIndex(0)  # onglet « Paramètres »
+
+    def _on_node_insert(self, position: int) -> None:
+        """Insère une action à la position choisie via la palette surgissante."""
+        from .action_palette import ActionPaletteDialog
+
+        wf = self._current()
+        if wf is None:
+            return
+        dialog = ActionPaletteDialog(self)
+        if dialog.exec() and dialog.chosen_type:
+            position = max(0, min(position, len(wf.actions)))
+            wf.actions.insert(position, registry.create_action(dialog.chosen_type))
+            self._refresh_action_list(select=position)
+
     def _build_right_panel(self) -> QTabWidget:
         tabs = QTabWidget()
-        self.param_panel = ParamPanel()
+        self.param_panel = ParamPanel(services=self._panel_services())
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(self.param_panel)
@@ -184,13 +258,18 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self._btn_new_profile)
         toolbar.addSeparator()
 
+        act_gallery = QAction("📚 Galerie de modèles", self)
+        act_gallery.triggered.connect(self._open_gallery)
+        act_wizard = QAction("🧭 Assistant", self)
+        act_wizard.triggered.connect(self._run_wizard)
+        toolbar.addAction(act_wizard)
         act_settings = QAction(tr("settings", lang), self)
         act_settings.triggered.connect(self._open_settings)
         act_history = QAction(tr("history", lang), self)
         act_history.triggered.connect(self._open_history)
         act_export_py = QAction(tr("export_py", lang), self)
         act_export_py.triggered.connect(self._export_python)
-        for act in (act_settings, act_history, act_export_py):
+        for act in (act_gallery, act_settings, act_history, act_export_py):
             toolbar.addAction(act)
 
     def _build_tray(self) -> None:
@@ -302,6 +381,8 @@ class MainWindow(QMainWindow):
         if wf is None:
             return
         self.action_panel.set_actions(wf.actions, select)
+        if getattr(self, "_views", None) is not None and self._views.currentIndex() == 1:
+            self.node_view.set_actions(wf.actions, select)
         self._select_action(select)
 
     def _new_workflow(self) -> None:
@@ -423,6 +504,45 @@ class MainWindow(QMainWindow):
             self._load_workflows()
 
     # --------------------------------------------------- gestion des actions
+    def _panel_services(self):
+        """Construit les fournisseurs concrets branchés sur le panneau de params."""
+        from ..services import list_installed_apps, list_open_windows, test_action
+        from ..services.windows_list import window_titles
+        from .param_panel import PanelServices
+
+        def variables_provider() -> list[str]:
+            names: list[str] = []
+            if self._worker is not None:
+                names = list(self._worker.executor.variables.as_dict().keys())
+            wf = self._current()
+            if wf is not None:
+                for act in wf.actions:
+                    for key in ("name", "var_name", "output_var"):
+                        val = str(act.params.get(key, "")).strip()
+                        if val and val not in names:
+                            names.append(val)
+            return names
+
+        def apps_provider() -> list[tuple[str, str]]:
+            return [(a.name, a.path) for a in list_installed_apps()]
+
+        def workflows_provider() -> list[str]:
+            return [wf.name for wf in self.workflows]
+
+        def runner(action):
+            return test_action(action, self.inputs, self.windows,
+                               settings=self.settings,
+                               workflow_resolver=self._resolve_workflow)
+
+        return PanelServices(
+            inputs=self.inputs,
+            windows_provider=window_titles,
+            apps_provider=apps_provider,
+            variables_provider=variables_provider,
+            workflows_provider=workflows_provider,
+            test_runner=runner,
+        )
+
     def _select_action(self, index: int) -> None:
         wf = self._current()
         if wf is None or not (0 <= index < len(wf.actions)):
@@ -436,6 +556,8 @@ class MainWindow(QMainWindow):
             return
         row = self.action_panel.current_row()
         self.action_panel.set_actions(wf.actions, row)
+        if getattr(self, "_views", None) is not None and self._views.currentIndex() == 1:
+            self.node_view.set_actions(wf.actions, row)
 
     def _add_action(self, type_name: str) -> None:
         wf = self._current()
@@ -619,6 +741,54 @@ class MainWindow(QMainWindow):
     def _open_history(self) -> None:
         HistoryDialog(self.history, self).exec()
 
+    def _maybe_onboard(self) -> None:
+        """Affiche l'écran d'accueil au tout premier lancement."""
+        if self.settings.onboarded:
+            return
+        self.settings.onboarded = True
+        save_settings(self.settings)
+        from .onboarding import WelcomeDialog
+
+        welcome = WelcomeDialog(self)
+        if not welcome.exec() or welcome.choice is None:
+            return
+        if welcome.choice == WelcomeDialog.GALLERY:
+            self._open_gallery()
+        elif welcome.choice == WelcomeDialog.WIZARD:
+            self._run_wizard()
+        elif welcome.choice == WelcomeDialog.SCRATCH:
+            self._new_workflow()
+
+    def _run_wizard(self) -> None:
+        """Lance l'assistant de création guidée d'un workflow."""
+        from .onboarding import CreationWizard
+
+        wizard = CreationWizard(self)
+        if wizard.exec():
+            wf = wizard.build_workflow()
+            wf.name = self._unique_name(wf.name)
+            self.workflows.append(wf)
+            self.current_index = len(self.workflows) - 1
+            self._refresh_workflow_list()
+            self._refresh_current()
+            self.log_console.append_log(
+                f"Workflow « {wf.name} » créé via l'assistant.", "info")
+
+    def _open_gallery(self) -> None:
+        """Ouvre la galerie de modèles et clone le modèle choisi."""
+        from .template_gallery import TemplateGallery
+
+        gallery = TemplateGallery(self)
+        if gallery.exec() and gallery.selected_template is not None:
+            wf = gallery.selected_template.to_workflow()
+            wf.name = self._unique_name(wf.name)
+            self.workflows.append(wf)
+            self.current_index = len(self.workflows) - 1
+            self._refresh_workflow_list()
+            self._refresh_current()
+            self.log_console.append_log(
+                f"Modèle « {wf.name} » ajouté à vos workflows.", "info")
+
     def _apply_theme(self) -> None:
         from PySide6.QtWidgets import QApplication
 
@@ -684,6 +854,10 @@ class MainWindow(QMainWindow):
             self._register_workflow_hotkeys()
             self._wf_hotkeys.restart()
         self._apply_theme()
+        if not self.settings.onboarded:
+            from PySide6.QtCore import QTimer
+
+            QTimer.singleShot(0, self._maybe_onboard)
 
     def closeEvent(self, event) -> None:  # noqa: N802
         # Réduction dans la barre des tâches plutôt que fermeture.
