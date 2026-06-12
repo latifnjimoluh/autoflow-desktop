@@ -18,11 +18,22 @@ class ParamSpec:
     Attributs :
         name : identifiant technique du paramètre (clé dans ``params``).
         label : libellé affiché à l'utilisateur (en français).
-        type : type logique parmi ``str``, ``text``, ``int``, ``float``,
-            ``bool``, ``keys``, ``choice``, ``file`` ou ``coord``.
+        type : type logique du champ. Types **abstraits** historiques : ``str``,
+            ``text``, ``int``, ``float``, ``bool``, ``keys``, ``choice``,
+            ``file``. Types **concrets** v3 (composants guidés) : ``key`` (capture
+            de touche + liste cherchable), ``hotkey`` (capture de combinaison),
+            ``window`` (liste des fenêtres ouvertes), ``app`` (apps installées /
+            parcourir / manuel), ``color`` (sélecteur de couleur), ``variable``
+            (liste des variables existantes), ``folder`` (dossier) et
+            ``workflow`` (liste des workflows). Un type inconnu retombe sur un
+            champ texte (compatibilité ascendante).
         default : valeur par défaut.
         choices : valeurs possibles pour le type ``choice``.
-        help : texte d'aide facultatif.
+        help : texte d'aide facultatif (infobulle).
+        placeholder : exemple affiché en filigrane (ex. « Ex : notepad.exe »).
+        supports_vars : si vrai, le champ propose l'insertion de ``{{variable}}``.
+        depends_on : couple ``(nom_param, valeur)`` ; le champ n'est affiché que
+            si l'autre paramètre vaut cette valeur (champs guidés conditionnels).
     """
 
     name: str
@@ -31,6 +42,9 @@ class ParamSpec:
     default: Any = None
     choices: list[Any] | None = None
     help: str = ""
+    placeholder: str = ""
+    supports_vars: bool = False
+    depends_on: tuple[str, Any] | None = None
 
 
 class Action(abc.ABC):

@@ -19,10 +19,13 @@ class LaunchAppAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("path", "Chemin", "file", "",
-                      help="Chemin de l'exécutable ou du fichier à ouvrir."),
-            ParamSpec("args", "Arguments", "str", "",
-                      help="Arguments séparés par des espaces (optionnel)."),
+            ParamSpec("path", "Application", "app", "",
+                      placeholder="Ex : notepad.exe",
+                      help="Choisissez parmi les applications installées, "
+                           "parcourez un fichier, ou saisissez un chemin/commande."),
+            ParamSpec("args", "Arguments (optionnel)", "str", "",
+                      placeholder="Ex : mon_fichier.txt",
+                      help="Arguments séparés par des espaces."),
         ]
 
     def validate(self) -> None:
@@ -36,4 +39,8 @@ class LaunchAppAction(Action):
         return windows.launch(str(self.params["path"]), args)
 
     def summary(self) -> str:
-        return f"Lancer « {self.params.get('path')} »"
+        from pathlib import Path
+
+        path = str(self.params.get("path", ""))
+        nom = Path(path).stem or path or "?"
+        return f"Lancer l'application « {nom} »"

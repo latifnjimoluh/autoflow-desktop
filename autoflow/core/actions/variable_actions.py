@@ -19,8 +19,9 @@ class SetVariableAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("name", "Nom", "str", "ma_variable"),
-            ParamSpec("value", "Valeur", "str", ""),
+            ParamSpec("name", "Nom de la variable", "variable", "ma_variable"),
+            ParamSpec("value", "Valeur", "str", "", supports_vars=True,
+                      placeholder="Ex : Bonjour {{date}}"),
         ]
 
     def validate(self) -> None:
@@ -50,8 +51,8 @@ class IncrementVariableAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("name", "Nom", "str", "compteur"),
-            ParamSpec("by", "Pas", "float", 1.0),
+            ParamSpec("name", "Variable à incrémenter", "variable", "compteur"),
+            ParamSpec("by", "Pas (valeur ajoutée)", "float", 1.0),
         ]
 
     def validate(self) -> None:

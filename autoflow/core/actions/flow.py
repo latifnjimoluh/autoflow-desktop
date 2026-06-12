@@ -14,23 +14,37 @@ from ..registry import action_from_dict, register
 from .base import Action, ParamSpec
 
 # Champs de paramètres décrivant un test (réutilisés par condition et boucle).
+# Chaque champ n'apparaît que pour le(s) type(s) de test concerné(s) grâce à
+# ``depends_on`` : l'utilisateur ne voit que les réglages pertinents.
 _CONDITION_SPECS = [
-    ParamSpec("test", "Test", "choice", "window_present",
-              choices=list(conditions.CONDITION_TESTS.keys())),
-    ParamSpec("title", "Titre fenêtre", "str", ""),
-    ParamSpec("match", "Correspondance", "choice", "contains",
-              choices=["contains", "exact"]),
-    ParamSpec("image_path", "Image", "file", ""),
-    ParamSpec("confidence", "Confiance", "float", 0.8),
-    ParamSpec("x", "X", "int", 0),
-    ParamSpec("y", "Y", "int", 0),
-    ParamSpec("color", "Couleur (#RRGGBB)", "str", "#000000"),
-    ParamSpec("tolerance", "Tolérance", "int", 10),
-    ParamSpec("file_path", "Fichier", "file", ""),
-    ParamSpec("var_name", "Variable", "str", ""),
+    ParamSpec("test", "Type de test", "choice", "window_present",
+              choices=list(conditions.CONDITION_TESTS.keys()),
+              help="Choisissez ce qui doit être vérifié ; les champs s'adaptent."),
+    ParamSpec("title", "Fenêtre", "window", "",
+              placeholder="Ex : Chrome",
+              depends_on=("test", ("window_present", "window_absent"))),
+    ParamSpec("match", "Correspondance du titre", "choice", "contains",
+              choices=["contains", "exact"],
+              depends_on=("test", ("window_present", "window_absent"))),
+    ParamSpec("image_path", "Image à détecter", "file", "",
+              depends_on=("test", "image_present")),
+    ParamSpec("confidence", "Confiance (0-1)", "float", 0.8,
+              depends_on=("test", "image_present")),
+    ParamSpec("x", "X", "int", 0, depends_on=("test", "pixel_color")),
+    ParamSpec("y", "Y", "int", 0, depends_on=("test", "pixel_color")),
+    ParamSpec("color", "Couleur attendue", "color", "#000000",
+              depends_on=("test", "pixel_color")),
+    ParamSpec("tolerance", "Tolérance", "int", 10,
+              depends_on=("test", "pixel_color")),
+    ParamSpec("file_path", "Fichier", "file", "",
+              depends_on=("test", "file_exists")),
+    ParamSpec("var_name", "Variable", "variable", "",
+              depends_on=("test", "variable_compare")),
     ParamSpec("operator", "Opérateur", "choice", "==",
-              choices=["==", "!=", ">", "<", ">=", "<=", "contains"]),
-    ParamSpec("value", "Valeur", "str", ""),
+              choices=["==", "!=", ">", "<", ">=", "<=", "contains"],
+              depends_on=("test", "variable_compare")),
+    ParamSpec("value", "Valeur à comparer", "str", "", supports_vars=True,
+              depends_on=("test", "variable_compare")),
 ]
 
 
@@ -110,11 +124,16 @@ class LoopAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         specs = [
-            ParamSpec("mode", "Mode", "choice", "count",
-                      choices=["count", "while", "until"]),
-            ParamSpec("count", "Nombre de répétitions", "int", 3),
-            ParamSpec("max_iterations", "Garde-fou (max)", "int", 1000),
+            ParamSpec("mode", "Type de boucle", "choice", "count",
+                      choices=["count", "while", "until"],
+                      help="N fois, tant que (while) ou jusqu'à (until) une condition."),
+            ParamSpec("count", "Nombre de répétitions", "int", 3,
+                      depends_on=("mode", "count")),
+            ParamSpec("max_iterations", "Garde-fou : itérations max", "int", 1000,
+                      help="Sécurité contre les boucles infinies."),
         ]
+        # En mode while/until, on réutilise les champs de condition (sans la
+        # ligne « count » déjà gérée ci-dessus).
         return specs + list(_CONDITION_SPECS)
 
     def child_groups(self) -> dict[str, list[Action]]:
@@ -184,7 +203,8 @@ class RunWorkflowAction(Action):
 
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
-        return [ParamSpec("workflow_name", "Nom du workflow", "str", "")]
+        return [ParamSpec("workflow_name", "Workflow à exécuter", "workflow", "",
+                          help="Choisissez un workflow existant à réutiliser.")]
 
     def validate(self) -> None:
         if not str(self.params.get("workflow_name", "")).strip():

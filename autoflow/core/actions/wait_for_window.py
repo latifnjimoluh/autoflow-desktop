@@ -19,10 +19,13 @@ class WaitForWindowAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("title", "Titre", "str", ""),
-            ParamSpec("match", "Correspondance", "choice", "contains",
+            ParamSpec("title", "Fenêtre attendue", "window", "",
+                      placeholder="Ex : Calculatrice",
+                      help="Choisissez une fenêtre ouverte ou saisissez un "
+                           "fragment de titre à attendre."),
+            ParamSpec("match", "Correspondance du titre", "choice", "contains",
                       choices=["contains", "exact"]),
-            ParamSpec("timeout", "Délai max (s)", "float", 10.0),
+            ParamSpec("timeout", "Délai maximum d'attente (s)", "float", 10.0),
         ]
 
     def validate(self) -> None:

@@ -19,8 +19,10 @@ class HotkeyAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("keys", "Touches", "keys", ["ctrl", "c"],
-                      help="Liste des touches du raccourci, ex. ctrl + end."),
+            ParamSpec("keys", "Raccourci", "hotkey", ["ctrl", "c"],
+                      placeholder="Ex : Ctrl + Maj + S",
+                      help="Cliquez « Enregistrer » puis pressez la combinaison, "
+                           "ou cochez les modificateurs et choisissez la touche."),
         ]
 
     def _keys(self) -> list[str]:
@@ -39,4 +41,6 @@ class HotkeyAction(Action):
         return inputs.hotkey(self._keys())
 
     def summary(self) -> str:
-        return "Raccourci " + "+".join(self._keys())
+        from ...services.keys import keys_to_label
+
+        return "Raccourci clavier « " + keys_to_label(self._keys()) + " »"

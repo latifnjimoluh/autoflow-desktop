@@ -20,12 +20,12 @@ class ScreenshotAction(Action):
     def param_specs(cls) -> list[ParamSpec]:
         return [
             ParamSpec("path", "Fichier de sortie", "file", "capture.png"),
-            ParamSpec("region", "Région (optionnel)", "bool", False,
+            ParamSpec("region", "Limiter à une région", "bool", False,
                       help="Si coché, capture la zone X/Y/Largeur/Hauteur."),
-            ParamSpec("x", "X", "int", 0),
-            ParamSpec("y", "Y", "int", 0),
-            ParamSpec("width", "Largeur", "int", 0),
-            ParamSpec("height", "Hauteur", "int", 0),
+            ParamSpec("x", "X", "int", 0, depends_on=("region", True)),
+            ParamSpec("y", "Y", "int", 0, depends_on=("region", True)),
+            ParamSpec("width", "Largeur", "int", 0, depends_on=("region", True)),
+            ParamSpec("height", "Hauteur", "int", 0, depends_on=("region", True)),
         ]
 
     def validate(self) -> None:

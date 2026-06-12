@@ -19,8 +19,14 @@ class TypeTextAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("text", "Texte", "text", ""),
-            ParamSpec("interval", "Intervalle entre caractères (s)", "float", 0.0),
+            ParamSpec("text", "Texte à taper", "text", "", supports_vars=True,
+                      placeholder="Ex : Bonjour {{date}}",
+                      help="Vous pouvez insérer des variables avec {{nom}}."),
+            ParamSpec("paste", "Coller d'un coup (plus rapide)", "bool", False,
+                      help="Colle le texte instantanément au lieu de le taper "
+                           "caractère par caractère."),
+            ParamSpec("interval", "Vitesse : intervalle entre caractères (s)",
+                      "float", 0.0, depends_on=("paste", False)),
         ]
 
     def validate(self) -> None:
@@ -29,8 +35,14 @@ class TypeTextAction(Action):
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         self.validate()
+        text = str(self._resolve(self.params.get("text", ""), context))
+        if self.params.get("paste"):
+            clip = (context or {}).get("clipboard")
+            if clip is not None:
+                clip.set_text(text)
+                return inputs.hotkey(["ctrl", "v"])
         return inputs.type_text(
-            str(self._resolve(self.params.get("text", ""), context)),
+            text,
             interval=float(self.params.get("interval", 0.0)),
         )
 

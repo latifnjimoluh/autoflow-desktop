@@ -24,11 +24,14 @@ class ActivateWindowAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("title", "Titre", "str", "",
-                      help="Titre (ou fragment) de la fenêtre cible."),
-            ParamSpec("match", "Correspondance", "choice", "contains",
+            ParamSpec("title", "Fenêtre cible", "window", "",
+                      placeholder="Ex : Bloc-notes",
+                      help="Choisissez une fenêtre ouverte dans la liste, ou "
+                           "saisissez un fragment de titre pour une fenêtre à venir."),
+            ParamSpec("match", "Correspondance du titre", "choice", "contains",
                       choices=["contains", "exact"]),
-            ParamSpec("force_foreground", "Forcer le premier plan", "bool", False,
+            ParamSpec("force_foreground", "Forcer le passage au premier plan",
+                      "bool", False,
                       help="Astuce Windows (Alt) pour vaincre le refus d'activation."),
         ]
 

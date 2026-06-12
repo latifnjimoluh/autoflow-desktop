@@ -20,10 +20,15 @@ class RunCommandAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("command", "Commande", "text", ""),
-            ParamSpec("shell", "Via le shell", "bool", True),
-            ParamSpec("output_var", "Variable de sortie", "str", ""),
-            ParamSpec("timeout", "Timeout (s)", "float", 30.0),
+            ParamSpec("command", "Commande / script", "text", "", supports_vars=True,
+                      placeholder="Ex : echo Bonjour"),
+            ParamSpec("shell", "Via le shell", "bool", True,
+                      help="Interprète la commande par le shell du système."),
+            ParamSpec("workdir", "Dossier de travail (optionnel)", "folder", "",
+                      placeholder="Ex : C:\\mon_projet"),
+            ParamSpec("output_var", "Capturer la sortie dans la variable", "variable", "",
+                      placeholder="Ex : resultat"),
+            ParamSpec("timeout", "Délai maximum (s)", "float", 30.0),
         ]
 
     def validate(self) -> None:
@@ -35,12 +40,14 @@ class RunCommandAction(Action):
         command = self._resolve(self.params.get("command", ""), context)
         use_shell = bool(self.params.get("shell", True))
         timeout = float(self.params.get("timeout", 30.0)) or None
+        workdir = str(self.params.get("workdir", "")).strip() or None
         result = subprocess.run(
             command if use_shell else command.split(),
             shell=use_shell,
             capture_output=True,
             text=True,
             timeout=timeout,
+            cwd=workdir,
         )
         store = (context or {}).get("variables")
         var = str(self.params.get("output_var", "")).strip()
@@ -68,7 +75,8 @@ class ClipboardSetAction(Action):
 
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
-        return [ParamSpec("text", "Texte", "text", "")]
+        return [ParamSpec("text", "Texte à copier", "text", "", supports_vars=True,
+                          placeholder="Ex : {{resultat}}")]
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         clip = (context or {}).get("clipboard")
@@ -78,7 +86,7 @@ class ClipboardSetAction(Action):
         return text
 
     def summary(self) -> str:
-        return "Copier dans le presse-papiers"
+        return "Copier du texte dans le presse-papiers"
 
 
 @register
@@ -91,7 +99,8 @@ class ClipboardGetAction(Action):
 
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
-        return [ParamSpec("var_name", "Variable", "str", "presse_papiers")]
+        return [ParamSpec("var_name", "Stocker dans la variable", "variable",
+                          "presse_papiers")]
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         clip = (context or {}).get("clipboard")
@@ -115,7 +124,8 @@ class ClipboardPasteAction(Action):
 
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
-        return [ParamSpec("text", "Texte à coller (optionnel)", "text", "")]
+        return [ParamSpec("text", "Texte à coller (optionnel)", "text", "",
+                          supports_vars=True)]
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         clip = (context or {}).get("clipboard")

@@ -19,11 +19,13 @@ class ClickAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("use_current", "Position actuelle de la souris", "bool", False,
+            ParamSpec("use_current", "Cliquer à la position actuelle de la souris",
+                      "bool", False,
                       help="Si coché, ignore X/Y et clique là où se trouve le curseur."),
-            ParamSpec("x", "X", "int", 0),
-            ParamSpec("y", "Y", "int", 0),
-            ParamSpec("button", "Bouton", "choice", "left",
+            ParamSpec("x", "X", "int", 0, depends_on=("use_current", False),
+                      help="Utilisez « Capturer une position » pour pointer à l'écran."),
+            ParamSpec("y", "Y", "int", 0, depends_on=("use_current", False)),
+            ParamSpec("button", "Bouton de la souris", "choice", "left",
                       choices=["left", "right", "middle"]),
             ParamSpec("clicks", "Nombre de clics", "int", 1,
                       help="1 = simple clic, 2 = double clic."),
@@ -48,9 +50,11 @@ class ClickAction(Action):
             clicks=int(self.params.get("clicks", 1)),
         )
 
+    _BUTTONS = {"left": "gauche", "right": "droit", "middle": "du milieu"}
+
     def summary(self) -> str:
-        clics = "double clic" if int(self.params.get("clicks", 1)) >= 2 else "clic"
-        bouton = self.params.get("button", "left")
+        clics = "Double-clic" if int(self.params.get("clicks", 1)) >= 2 else "Clic"
+        bouton = self._BUTTONS.get(self.params.get("button", "left"), "gauche")
         if self.params.get("use_current"):
-            return f"{clics.capitalize()} {bouton} (position actuelle)"
-        return f"{clics.capitalize()} {bouton} en ({self.params.get('x')}, {self.params.get('y')})"
+            return f"{clics} {bouton} à la position actuelle"
+        return f"{clics} {bouton} à la position ({self.params.get('x')}, {self.params.get('y')})"

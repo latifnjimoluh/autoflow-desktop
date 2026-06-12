@@ -28,9 +28,10 @@ class FindImageAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("image_path", "Image", "file", ""),
-            ParamSpec("confidence", "Confiance", "float", 0.8),
-            ParamSpec("var_name", "Variable (x,y)", "str", "image_pos"),
+            ParamSpec("image_path", "Image à rechercher", "file", ""),
+            ParamSpec("confidence", "Confiance (0-1)", "float", 0.8),
+            ParamSpec("var_name", "Stocker la position (x,y) dans", "variable",
+                      "image_pos"),
         ]
 
     def validate(self) -> None:
@@ -70,11 +71,12 @@ class WaitForPixelAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("x", "X", "int", 0),
+            ParamSpec("x", "X", "int", 0,
+                      help="Utilisez « Capturer un pixel » pour pointer à l'écran."),
             ParamSpec("y", "Y", "int", 0),
-            ParamSpec("color", "Couleur (#RRGGBB)", "str", "#ffffff"),
+            ParamSpec("color", "Couleur attendue", "color", "#ffffff"),
             ParamSpec("tolerance", "Tolérance", "int", 10),
-            ParamSpec("timeout", "Délai max (s)", "float", 10.0),
+            ParamSpec("timeout", "Délai maximum (s)", "float", 10.0),
         ]
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
@@ -108,13 +110,14 @@ class ReadTextAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("region", "Région", "bool", True),
-            ParamSpec("x", "X", "int", 0),
-            ParamSpec("y", "Y", "int", 0),
-            ParamSpec("width", "Largeur", "int", 200),
-            ParamSpec("height", "Hauteur", "int", 50),
-            ParamSpec("lang", "Langue", "str", "fra"),
-            ParamSpec("var_name", "Variable", "str", "texte_ocr"),
+            ParamSpec("region", "Limiter à une région", "bool", True),
+            ParamSpec("x", "X", "int", 0, depends_on=("region", True)),
+            ParamSpec("y", "Y", "int", 0, depends_on=("region", True)),
+            ParamSpec("width", "Largeur", "int", 200, depends_on=("region", True)),
+            ParamSpec("height", "Hauteur", "int", 50, depends_on=("region", True)),
+            ParamSpec("lang", "Langue", "choice", "fra",
+                      choices=["fra", "eng", "deu", "spa", "ita"]),
+            ParamSpec("var_name", "Stocker le texte lu dans", "variable", "texte_ocr"),
         ]
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
