@@ -1,0 +1,28 @@
+{
+  "name": "Capture d'écran planifiée",
+  "description": "Prend une capture d'écran complète à intervalle régulier.",
+  "category": "Productivité",
+  "icon": "🚀",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 1800,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "screenshot",
+      "params": {
+        "path": "capture_{{iteration}}.png",
+        "region": false,
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

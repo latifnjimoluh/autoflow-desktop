@@ -1,0 +1,35 @@
+{
+  "name": "Anti-veille — Terminal / Cmder",
+  "description": "Garde un terminal actif en envoyant régulièrement la touche Entrée.",
+  "category": "Maintien d'activité",
+  "icon": "☕",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 600,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "activate_window",
+      "params": {
+        "title": "Cmder",
+        "match": "contains",
+        "force_foreground": true
+      },
+      "enabled": true,
+      "delay_after": 0.4
+    },
+    {
+      "type": "key_press",
+      "params": {
+        "key": "enter",
+        "presses": 1,
+        "interval": 0.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

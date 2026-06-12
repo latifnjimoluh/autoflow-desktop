@@ -1,0 +1,47 @@
+{
+  "name": "Attendre une fenêtre puis agir",
+  "description": "Attend l'apparition d'une fenêtre, la met au premier plan puis notifie.",
+  "category": "Surveillance",
+  "icon": "👁",
+  "schedule": {
+    "mode": "run_once",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "wait_for_window",
+      "params": {
+        "title": "Calculatrice",
+        "match": "contains",
+        "timeout": 60.0
+      },
+      "enabled": true,
+      "delay_after": 0.2
+    },
+    {
+      "type": "activate_window",
+      "params": {
+        "title": "Calculatrice",
+        "match": "contains",
+        "force_foreground": true
+      },
+      "enabled": true,
+      "delay_after": 0.2
+    },
+    {
+      "type": "run_command",
+      "params": {
+        "command": "msg * La fenetre est apparue !",
+        "shell": true,
+        "workdir": "",
+        "output_var": "",
+        "timeout": 10.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

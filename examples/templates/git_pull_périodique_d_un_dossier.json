@@ -1,0 +1,27 @@
+{
+  "name": "Git — pull périodique d'un dossier",
+  "description": "Exécute « git pull » dans un dossier de projet à intervalle régulier.",
+  "category": "Terminal / Dev",
+  "icon": "💻",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 3600,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "params": {
+        "command": "git pull",
+        "shell": true,
+        "workdir": "",
+        "output_var": "git_resultat",
+        "timeout": 60.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

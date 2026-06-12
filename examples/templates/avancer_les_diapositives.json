@@ -1,0 +1,25 @@
+{
+  "name": "Avancer les diapositives",
+  "description": "Appuie sur la flèche droite toutes les X secondes pour faire défiler une présentation.",
+  "category": "Média / Présentation",
+  "icon": "🎬",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 10,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "key_press",
+      "params": {
+        "key": "right",
+        "presses": 1,
+        "interval": 0.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

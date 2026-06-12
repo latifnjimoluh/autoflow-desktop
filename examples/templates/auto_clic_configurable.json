@@ -1,0 +1,52 @@
+{
+  "name": "Auto-clic configurable",
+  "description": "Clique en boucle à une position donnée, à intervalle régulier.",
+  "category": "Automatisation répétitive",
+  "icon": "🔁",
+  "schedule": {
+    "mode": "run_once",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "loop",
+      "params": {
+        "mode": "count",
+        "count": 20,
+        "max_iterations": 1000,
+        "test": "window_present",
+        "title": "",
+        "match": "contains",
+        "image_path": "",
+        "confidence": 0.8,
+        "x": 0,
+        "y": 0,
+        "color": "#000000",
+        "tolerance": 10,
+        "file_path": "",
+        "var_name": "",
+        "operator": "==",
+        "value": ""
+      },
+      "enabled": true,
+      "delay_after": 0.0,
+      "body": [
+        {
+          "type": "click",
+          "params": {
+            "use_current": false,
+            "x": 500,
+            "y": 400,
+            "button": "left",
+            "clicks": 1
+          },
+          "enabled": true,
+          "delay_after": 0.5
+        }
+      ]
+    }
+  ]
+}

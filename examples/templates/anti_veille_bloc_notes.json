@@ -1,0 +1,46 @@
+{
+  "name": "Anti-veille — Bloc-notes",
+  "description": "Empêche la mise en veille en tapant un point dans le Bloc-notes toutes les 15 minutes.",
+  "category": "Maintien d'activité",
+  "icon": "☕",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "activate_window",
+      "params": {
+        "title": "Bloc-notes",
+        "match": "contains",
+        "force_foreground": false
+      },
+      "enabled": true,
+      "delay_after": 0.3
+    },
+    {
+      "type": "hotkey",
+      "params": {
+        "keys": [
+          "ctrl",
+          "end"
+        ]
+      },
+      "enabled": true,
+      "delay_after": 0.1
+    },
+    {
+      "type": "type_text",
+      "params": {
+        "text": ".",
+        "paste": false,
+        "interval": 0.05
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

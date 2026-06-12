@@ -1,0 +1,60 @@
+{
+  "name": "Saisie répétitive et validation",
+  "description": "Tape un texte puis valide avec Entrée, en boucle (ex. remplir un champ).",
+  "category": "Automatisation répétitive",
+  "icon": "🔁",
+  "schedule": {
+    "mode": "run_once",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "loop",
+      "params": {
+        "mode": "count",
+        "count": 5,
+        "max_iterations": 1000,
+        "test": "window_present",
+        "title": "",
+        "match": "contains",
+        "image_path": "",
+        "confidence": 0.8,
+        "x": 0,
+        "y": 0,
+        "color": "#000000",
+        "tolerance": 10,
+        "file_path": "",
+        "var_name": "",
+        "operator": "==",
+        "value": ""
+      },
+      "enabled": true,
+      "delay_after": 0.0,
+      "body": [
+        {
+          "type": "type_text",
+          "params": {
+            "text": "Ligne {{iteration}}",
+            "paste": false,
+            "interval": 0.0
+          },
+          "enabled": true,
+          "delay_after": 0.2
+        },
+        {
+          "type": "key_press",
+          "params": {
+            "key": "enter",
+            "presses": 1,
+            "interval": 0.0
+          },
+          "enabled": true,
+          "delay_after": 0.3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Attendre une image puis cliquer",
+  "description": "Attend qu'une image apparaisse à l'écran puis clique dessus (vision).",
+  "category": "Surveillance",
+  "icon": "👁",
+  "schedule": {
+    "mode": "run_once",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "wait_for_image",
+      "params": {
+        "path": "bouton.png",
+        "timeout": 30.0,
+        "confidence": 0.9
+      },
+      "enabled": true,
+      "delay_after": 0.2
+    },
+    {
+      "type": "click_image",
+      "params": {
+        "path": "bouton.png",
+        "confidence": 0.9,
+        "button": "left"
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

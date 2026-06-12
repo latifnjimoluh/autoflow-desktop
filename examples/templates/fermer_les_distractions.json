@@ -1,0 +1,27 @@
+{
+  "name": "Fermer les distractions",
+  "description": "Ferme une liste d'applications distrayantes pour rester concentré.",
+  "category": "Productivité",
+  "icon": "🚀",
+  "schedule": {
+    "mode": "run_once",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "params": {
+        "command": "taskkill /IM notepad.exe /F",
+        "shell": true,
+        "workdir": "",
+        "output_var": "",
+        "timeout": 15.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Anti-veille — Touche neutre F15",
+  "description": "Appuie périodiquement sur F15 (touche sans effet) pour simuler une activité.",
+  "category": "Maintien d'activité",
+  "icon": "☕",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 180,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "key_press",
+      "params": {
+        "key": "f15",
+        "presses": 1,
+        "interval": 0.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

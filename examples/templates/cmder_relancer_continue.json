@@ -1,0 +1,55 @@
+{
+  "name": "Cmder — relancer « continue »",
+  "description": "Force Cmder au premier plan et relance la commande « continue » toutes les 30 minutes.",
+  "category": "Terminal / Dev",
+  "icon": "💻",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 1800,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "activate_window",
+      "params": {
+        "title": "Cmder",
+        "match": "contains",
+        "force_foreground": true
+      },
+      "enabled": true,
+      "delay_after": 0.5
+    },
+    {
+      "type": "key_press",
+      "params": {
+        "key": "enter",
+        "presses": 2,
+        "interval": 0.2
+      },
+      "enabled": true,
+      "delay_after": 0.2
+    },
+    {
+      "type": "type_text",
+      "params": {
+        "text": "continue",
+        "paste": false,
+        "interval": 0.0
+      },
+      "enabled": true,
+      "delay_after": 0.2
+    },
+    {
+      "type": "key_press",
+      "params": {
+        "key": "enter",
+        "presses": 1,
+        "interval": 0.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

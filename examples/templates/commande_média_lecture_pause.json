@@ -1,0 +1,25 @@
+{
+  "name": "Commande média — Lecture / Pause",
+  "description": "Envoie la touche média Lecture/Pause (utile pour piloter un lecteur).",
+  "category": "Média / Présentation",
+  "icon": "🎬",
+  "schedule": {
+    "mode": "hotkey_trigger",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+p"
+  },
+  "actions": [
+    {
+      "type": "key_press",
+      "params": {
+        "key": "playpause",
+        "presses": 1,
+        "interval": 0.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

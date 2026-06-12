@@ -1,0 +1,27 @@
+{
+  "name": "Build — relancer un script planifié",
+  "description": "Lance une commande de build à heure fixe (ex. compilation nocturne).",
+  "category": "Terminal / Dev",
+  "icon": "💻",
+  "schedule": {
+    "mode": "at_time",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "02:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "params": {
+        "command": "npm run build",
+        "shell": true,
+        "workdir": "",
+        "output_var": "build_log",
+        "timeout": 600.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

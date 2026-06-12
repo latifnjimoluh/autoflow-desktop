@@ -1,0 +1,35 @@
+{
+  "name": "Anti-veille — Bouger la souris discrètement",
+  "description": "Déplace légèrement la souris à intervalle régulier, sans dépendre d'une application.",
+  "category": "Maintien d'activité",
+  "icon": "☕",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 120,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "move_mouse",
+      "params": {
+        "x": 200,
+        "y": 200,
+        "duration": 0.3
+      },
+      "enabled": true,
+      "delay_after": 0.5
+    },
+    {
+      "type": "move_mouse",
+      "params": {
+        "x": 205,
+        "y": 205,
+        "duration": 0.3
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

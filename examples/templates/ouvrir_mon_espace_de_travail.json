@@ -1,0 +1,33 @@
+{
+  "name": "Ouvrir mon espace de travail",
+  "description": "Lance d'un coup plusieurs applications de travail au démarrage.",
+  "category": "Productivité",
+  "icon": "🚀",
+  "schedule": {
+    "mode": "run_once",
+    "interval_seconds": 900,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "launch_app",
+      "params": {
+        "path": "notepad.exe",
+        "args": ""
+      },
+      "enabled": true,
+      "delay_after": 1.0
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "path": "calc.exe",
+        "args": ""
+      },
+      "enabled": true,
+      "delay_after": 1.0
+    }
+  ]
+}

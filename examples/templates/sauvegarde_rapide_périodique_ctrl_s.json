@@ -1,0 +1,26 @@
+{
+  "name": "Sauvegarde rapide périodique (Ctrl+S)",
+  "description": "Envoie Ctrl+S à intervalle régulier pour sauvegarder le document actif.",
+  "category": "Productivité",
+  "icon": "🚀",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 300,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "hotkey",
+      "params": {
+        "keys": [
+          "ctrl",
+          "s"
+        ]
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}

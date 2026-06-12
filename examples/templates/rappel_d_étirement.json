@@ -1,0 +1,27 @@
+{
+  "name": "Rappel d'étirement",
+  "description": "Affiche un rappel toutes les heures pour faire une pause et s'étirer.",
+  "category": "Productivité",
+  "icon": "🚀",
+  "schedule": {
+    "mode": "loop_interval",
+    "interval_seconds": 3600,
+    "max_iterations": 0,
+    "at_time": "08:00",
+    "hotkey": "ctrl+shift+r"
+  },
+  "actions": [
+    {
+      "type": "run_command",
+      "params": {
+        "command": "msg * Faites une pause et etirez-vous !",
+        "shell": true,
+        "workdir": "",
+        "output_var": "",
+        "timeout": 10.0
+      },
+      "enabled": true,
+      "delay_after": 0.0
+    }
+  ]
+}
