@@ -140,6 +140,78 @@ pip install pyinstaller
 pyinstaller --noconfirm --windowed --name AutoFlow -p . autoflow/main.py
 ```
 
+---
+
+## 🚀 Extension v2 — Application installable + 20 fonctionnalités
+
+### Installer / lancer comme une vraie application (sans Python)
+
+AutoFlow s'empaquette en **exécutable Windows autonome** + **installeur** :
+
+```powershell
+# Depuis la racine du dépôt, dans le venv :
+pip install pyinstaller
+.\packaging\build.ps1
+```
+
+- Produit `dist\AutoFlow\AutoFlow.exe` (application autonome, double-clic).
+- Si **Inno Setup** ([jrsoftware.org/isdl.php](https://jrsoftware.org/isdl.php))
+  est installé, produit aussi `dist\AutoFlow-Setup.exe` : un **installeur**
+  classique (raccourcis Bureau/menu Démarrer, option démarrage automatique,
+  désinstalleur). L'utilisateur final n'a **pas besoin de Python**.
+
+### Nouvelles fonctionnalités (20)
+
+**Logique & intelligence**
+1. **Conditions** (`si / sinon`) : fenêtre présente/absente, image, couleur de
+   pixel, fichier existant, comparaison de variable.
+2. **Boucles** (`N fois` / `tant que` / `jusqu'à`) avec garde-fou anti-infini.
+3. **Variables & expressions** : `{{nom}}` dans les paramètres, builtins
+   `{{date}}`, `{{heure}}`, `{{iteration}}`, capture OCR/presse-papiers/commande.
+4. **Sous-workflows** (`run_workflow`) réutilisables, avec anti-récursion.
+
+**Perception de l'écran**
+5. **Reconnaissance d'image** (OpenCV) : `find_image`, `wait_for_image`,
+   `click_image` (seuil de confiance).
+6. **Pixel** : `wait_for_pixel` et test couleur avec tolérance.
+7. **OCR** (`read_text`, Tesseract) — **dégradation propre** si Tesseract absent.
+
+**Nouvelles actions**
+8. **Commande / script** (`run_command`) avec capture de sortie en variable.
+9. **Presse-papiers** (`clipboard_set/get/paste`).
+10. **Délais aléatoires & jitter** « humain ».
+
+**Déclenchement & exécution**
+11. **Raccourci global par workflow** (mode « déclenché par raccourci »).
+12. **Planification avancée** (cron / jours / horaires multiples, APScheduler).
+13. **Timeout & ré-essais par action** (+ comportement en cas d'échec).
+14. **Mode pas-à-pas / débogage** avec surlignage et état des variables.
+
+**Intégration système**
+15. **Icône barre des tâches** (exécution en arrière-plan, menu contextuel).
+16. **Notifications de bureau** (début / fin / erreur).
+17. **Démarrage automatique avec Windows** (clé de registre `Run`).
+
+**Données & organisation**
+18. **Historique & statistiques** en **SQLite local** (aucun serveur, aucun
+    Docker) + **export CSV**.
+19. **Export d'un workflow en script Python autonome** (`.py` exécutable seul).
+20. **Profils / espaces de travail** (Travail, Jeux…), chacun ses workflows.
+
+**Transversal** : panneau de **réglages** (failsafe, pause, chemin Tesseract,
+**thème clair/sombre**, **langue FR/EN**, notifications, démarrage auto).
+
+### Notes importantes
+
+- **SQLite et winreg sont inclus dans Python** : aucun serveur, aucun Docker,
+  aucune installation supplémentaire pour l'historique et le démarrage auto.
+- **OCR** : nécessite le binaire **Tesseract** installé séparément ; son chemin
+  se configure dans *Réglages*. En son absence, l'action OCR est ignorée
+  proprement (message clair, pas de plantage).
+- **Compatibilité ascendante** : les anciens workflows (format « plat ») se
+  chargent et s'exécutent sans modification (vérifié par un test dédié).
+- L'automatisation réelle nécessite **Windows avec affichage**.
+
 ## Licence
 
 Distribué sous licence **MIT** — voir [LICENSE](LICENSE).

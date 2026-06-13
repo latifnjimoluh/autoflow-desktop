@@ -146,28 +146,29 @@ s'exécute sans modification (champs nouveaux = valeurs par défaut).
 
 ### 7.4 Les 20 fonctionnalités (ordre d'implémentation)
 
-- [ ] 3. Variables & expressions (`{{var}}`, builtins date/heure/iteration) — *socle*
-- [ ] 1. Action conditionnelle `condition` (si/sinon, tests variés)
-- [ ] 2. Boucle/bloc `loop` (N fois / while / until + garde-fou)
-- [ ] 4. Sous-workflows `run_workflow` (+ anti-récursion)
-- [ ] 8. `run_command` (subprocess, capture sortie → variable)
-- [ ] 9. Presse-papiers `clipboard_set/get/paste` (QClipboard)
-- [ ] 10. Délais aléatoires & jitter « humain »
-- [ ] 5. Vision OpenCV `find_image`/`wait_for_image`/`click_image`
-- [ ] 6. Pixel `wait_for_pixel` / test `pixel_color`
-- [ ] 7. OCR `read_text` (Tesseract, dégradation propre)
-- [ ] 11. Raccourci global par workflow
-- [ ] 12. Planification avancée (APScheduler, vue planifications)
-- [ ] 13. Timeout & retry par action
-- [ ] 14. Mode pas-à-pas / débogage
-- [ ] 15. Icône system tray + arrière-plan
-- [ ] 16. Notifications de bureau
-- [ ] 17. Démarrage automatique Windows (winreg)
-- [ ] 18. Historique & stats SQLite + export CSV
-- [ ] 19. Export d'un workflow en script Python autonome
-- [ ] 20. Profils / espaces de travail
-- [ ] Transversal : panneau de réglages (Tesseract, thème clair/sombre, langue FR/EN,
+- [x] 3. Variables & expressions (`{{var}}`, builtins date/heure/iteration) — *socle*
+- [x] 1. Action conditionnelle `condition` (si/sinon, tests variés)
+- [x] 2. Boucle/bloc `loop` (N fois / while / until + garde-fou)
+- [x] 4. Sous-workflows `run_workflow` (+ anti-récursion)
+- [x] 8. `run_command` (subprocess, capture sortie → variable)
+- [x] 9. Presse-papiers `clipboard_set/get/paste` (QClipboard)
+- [x] 10. Délais aléatoires & jitter « humain »
+- [x] 5. Vision OpenCV `find_image`/`wait_for_image`/`click_image`
+- [x] 6. Pixel `wait_for_pixel` / test `pixel_color`
+- [x] 7. OCR `read_text` (Tesseract, dégradation propre)
+- [x] 11. Raccourci global par workflow
+- [x] 12. Planification avancée (APScheduler, vue planifications)
+- [x] 13. Timeout & retry par action
+- [x] 14. Mode pas-à-pas / débogage
+- [x] 15. Icône system tray + arrière-plan
+- [x] 16. Notifications de bureau
+- [x] 17. Démarrage automatique Windows (winreg)
+- [x] 18. Historique & stats SQLite + export CSV
+- [x] 19. Export d'un workflow en script Python autonome
+- [x] 20. Profils / espaces de travail
+- [x] Transversal : panneau de réglages (Tesseract, thème clair/sombre, langue FR/EN,
       notifications, démarrage auto), persistant en JSON.
+- [x] Packaging : PyInstaller (`AutoFlow.exe`) + Inno Setup (installeur).
 
 ### 7.5 Hypothèses v2
 
