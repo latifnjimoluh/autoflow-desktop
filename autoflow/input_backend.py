@@ -81,6 +81,11 @@ class InputBackend:
         size = self._pyautogui().size()
         return int(size[0]), int(size[1])
 
+    def pixel(self, x: int, y: int) -> tuple[int, int, int]:
+        """Renvoie la couleur (r, g, b) du pixel aux coordonnées données."""
+        color = self._pyautogui().pixel(int(x), int(y))
+        return int(color[0]), int(color[1]), int(color[2])
+
     # -- Clavier -----------------------------------------------------------
     def press(self, key: str, presses: int = 1, interval: float = 0.0) -> None:
         """Appuie ``presses`` fois sur la touche ``key``."""

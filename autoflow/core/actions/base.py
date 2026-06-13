@@ -52,6 +52,10 @@ class Action(abc.ABC):
         params: dict[str, Any] | None = None,
         enabled: bool = True,
         delay_after: float = 0.0,
+        retries: int = 0,
+        retry_delay: float = 0.0,
+        on_error: str = "inherit",
+        delay_jitter: float = 0.0,
     ) -> None:
         # Initialise les paramètres avec les valeurs par défaut du schéma,
         # puis applique les valeurs fournies.
@@ -62,6 +66,11 @@ class Action(abc.ABC):
             self.params.update(params)
         self.enabled = bool(enabled)
         self.delay_after = float(delay_after)
+        # Politique d'exécution (fonctionnalités timeout/retry & délais humains).
+        self.retries = int(retries)
+        self.retry_delay = float(retry_delay)
+        self.on_error = str(on_error)  # "inherit" | "continue" | "stop"
+        self.delay_jitter = float(delay_jitter)
 
     # -- Schéma ------------------------------------------------------------
     @classmethod
@@ -90,24 +99,59 @@ class Action(abc.ABC):
 
     # -- (Dé)sérialisation -------------------------------------------------
     def to_dict(self) -> dict[str, Any]:
-        """Sérialise l'action en dictionnaire JSON-compatible."""
-        return {
+        """Sérialise l'action en dictionnaire JSON-compatible.
+
+        Les champs de politique (retries, on_error…) ne sont écrits que s'ils
+        diffèrent de leurs valeurs par défaut, afin de garder le JSON compact et
+        compatible avec les anciens workflows.
+        """
+        data: dict[str, Any] = {
             "type": self.type_name,
             "params": dict(self.params),
             "enabled": self.enabled,
             "delay_after": self.delay_after,
         }
+        if self.retries:
+            data["retries"] = self.retries
+        if self.retry_delay:
+            data["retry_delay"] = self.retry_delay
+        if self.on_error != "inherit":
+            data["on_error"] = self.on_error
+        if self.delay_jitter:
+            data["delay_jitter"] = self.delay_jitter
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Action":
-        """Reconstruit une action depuis un dictionnaire."""
+        """Reconstruit une action depuis un dictionnaire (compat. ascendante)."""
         return cls(
             params=data.get("params"),
             enabled=data.get("enabled", True),
             delay_after=data.get("delay_after", 0.0),
+            retries=data.get("retries", 0),
+            retry_delay=data.get("retry_delay", 0.0),
+            on_error=data.get("on_error", "inherit"),
+            delay_jitter=data.get("delay_jitter", 0.0),
         )
 
+    # -- Contrôle de flux --------------------------------------------------
+    def child_groups(self) -> dict[str, list["Action"]]:
+        """Renvoie les groupes d'actions enfants (vide pour une action simple).
+
+        Les actions de contrôle de flux (condition, boucle) surchargent cette
+        méthode pour exposer leurs sous-séquences, ce qui permet à l'interface
+        et au moteur de les parcourir de façon générique.
+        """
+        return {}
+
     # -- Aides -------------------------------------------------------------
+    def _resolve(self, value: Any, context: dict[str, Any] | None) -> Any:
+        """Substitue les gabarits ``{{var}}`` à l'aide du magasin de variables."""
+        store = (context or {}).get("variables")
+        if store is not None:
+            return store.resolve(value)
+        return value
+
     def _require_number(self, name: str) -> float:
         """Valide qu'un paramètre est un nombre et le renvoie."""
         value = self.params.get(name)
