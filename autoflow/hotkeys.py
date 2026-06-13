@@ -61,3 +61,42 @@ class EmergencyHotkey:
             except Exception:  # noqa: BLE001
                 pass
             self._listener = None
+
+
+class GlobalHotkeyManager:
+    """Écoute plusieurs raccourcis globaux (un par workflow déclenchable)."""
+
+    def __init__(self) -> None:
+        self._bindings: dict[str, Callable[[], None]] = {}
+        self._listener = None
+
+    def set_bindings(self, bindings: dict[str, Callable[[], None]]) -> None:
+        """Définit la table ``raccourci -> rappel`` et (re)démarre l'écoute."""
+        self._bindings = dict(bindings)
+        self.restart()
+
+    def restart(self) -> bool:
+        """(Re)démarre le listener avec les raccourcis courants."""
+        self.stop()
+        if not self._bindings:
+            return False
+        try:
+            from pynput import keyboard  # import paresseux
+
+            mapping = {to_pynput_hotkey(combo): cb
+                       for combo, cb in self._bindings.items()}
+            self._listener = keyboard.GlobalHotKeys(mapping)
+            self._listener.start()
+        except Exception:  # noqa: BLE001 - headless / conflit / non installé
+            self._listener = None
+            return False
+        return True
+
+    def stop(self) -> None:
+        """Arrête l'écoute."""
+        if self._listener is not None:
+            try:
+                self._listener.stop()
+            except Exception:  # noqa: BLE001
+                pass
+            self._listener = None

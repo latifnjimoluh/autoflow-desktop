@@ -9,20 +9,18 @@ from ..models.workflow import Workflow
 
 
 class ExecutorWorker(QObject):
-    """Exécute un workflow dans un thread et relaie l'avancement en signaux Qt.
-
-    Les rappels du moteur (appelés depuis le thread de travail) émettent des
-    signaux Qt ; la connexion en file d'attente garantit que l'interface est
-    mise à jour dans le thread principal, sans jamais geler.
-    """
+    """Exécute un workflow dans un thread et relaie l'avancement en signaux Qt."""
 
     log = Signal(str, str)
     status = Signal(str)
     iteration = Signal(int)
     finished = Signal(int)
+    step_at = Signal(object, int)  # action en cours (mode pas-à-pas)
+    action_at = Signal(object, int)
 
     def __init__(self, workflow: Workflow, inputs, windows,
-                 continue_on_error: bool = True) -> None:
+                 continue_on_error: bool = True, settings=None,
+                 workflow_resolver=None, step_mode: bool = False) -> None:
         super().__init__()
         self.executor = Executor(
             workflow,
@@ -31,7 +29,12 @@ class ExecutorWorker(QObject):
             log=self.log.emit,
             on_status=self.status.emit,
             on_iteration=self.iteration.emit,
+            on_action=lambda a, i: self.action_at.emit(a, i),
+            on_step=lambda a, i: self.step_at.emit(a, i),
             continue_on_error=continue_on_error,
+            settings=settings,
+            workflow_resolver=workflow_resolver,
+            step_mode=step_mode,
         )
 
     @Slot()
@@ -49,6 +52,9 @@ class ExecutorWorker(QObject):
 
     def request_stop(self) -> None:
         self.executor.request_stop()
+
+    def step(self) -> None:
+        self.executor.step()
 
     def is_paused(self) -> bool:
         return self.executor.is_paused()

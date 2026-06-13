@@ -67,6 +67,14 @@ class ParamPanel(QWidget):
             if widget is not None:
                 self._layout.addRow(spec.label, widget)
 
+        self._add_policy_fields(action)
+
+        # Bouton d'édition des sous-actions pour les conteneurs (condition, boucle).
+        if action.child_groups():
+            btn = QPushButton("Modifier les sous-actions…")
+            btn.clicked.connect(lambda: self._edit_children(action))
+            self._layout.addRow(btn)
+
     def _build_widget(self, spec: ParamSpec) -> QWidget | None:
         """Crée le widget correspondant au type du paramètre."""
         value = self._action.params.get(spec.name, spec.default)
@@ -127,6 +135,41 @@ class ParamPanel(QWidget):
             widget.setToolTip(spec.help)
         widget.textChanged.connect(lambda v, n=spec.name: self._update(n, v))
         return widget
+
+    def _add_policy_fields(self, action: Action) -> None:
+        """Ajoute la section « avancé » : ré-essais et comportement en cas d'échec."""
+        retries = QSpinBox()
+        retries.setRange(0, 100)
+        retries.setValue(int(action.retries))
+        retries.valueChanged.connect(lambda v: setattr(action, "retries", int(v)) or self._on_change())
+        self._layout.addRow("Ré-essais", retries)
+
+        retry_delay = QDoubleSpinBox()
+        retry_delay.setRange(0.0, 3600.0)
+        retry_delay.setDecimals(2)
+        retry_delay.setValue(float(action.retry_delay))
+        retry_delay.valueChanged.connect(lambda v: setattr(action, "retry_delay", float(v)) or self._on_change())
+        self._layout.addRow("Délai entre essais (s)", retry_delay)
+
+        on_error = QComboBox()
+        on_error.addItems(["inherit", "continue", "stop"])
+        on_error.setCurrentText(action.on_error)
+        on_error.currentTextChanged.connect(lambda v: setattr(action, "on_error", v) or self._on_change())
+        self._layout.addRow("En cas d'échec", on_error)
+
+        jitter = QDoubleSpinBox()
+        jitter.setRange(0.0, 60.0)
+        jitter.setDecimals(2)
+        jitter.setValue(float(action.delay_jitter))
+        jitter.valueChanged.connect(lambda v: setattr(action, "delay_jitter", float(v)) or self._on_change())
+        self._layout.addRow("Aléa de délai (s)", jitter)
+
+    def _edit_children(self, action: Action) -> None:
+        """Ouvre le dialogue d'édition des sous-actions du conteneur."""
+        from .child_editor import ChildEditorDialog
+
+        ChildEditorDialog(action, self).exec()
+        self._on_change()
 
     def _build_file_widget(self, spec: ParamSpec, value: Any) -> QWidget:
         """Crée un champ texte doublé d'un bouton « Parcourir »."""

@@ -10,11 +10,16 @@ def main() -> int:
     from PySide6.QtWidgets import QApplication
 
     from .gui.main_window import MainWindow
+    from .gui.theme import apply_theme
+    from .settings import load_settings
     from .utils.logging_setup import setup_logging
 
     setup_logging()
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName("AutoFlow")
+    # Empêche la fermeture de l'app quand la fenêtre est réduite dans le tray.
+    app.setQuitOnLastWindowClosed(False)
+    apply_theme(app, load_settings().theme)
     window = MainWindow()
     window.show()
     return app.exec()

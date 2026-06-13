@@ -9,21 +9,21 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from .store import data_dir, slugify
+from . import store
 
 DEFAULT_PROFILE = "Défaut"
 
 
 def profiles_root() -> Path:
     """Renvoie (et crée) le dossier racine des profils."""
-    path = data_dir() / "profiles"
+    path = store.data_dir() / "profiles"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def profile_dir(name: str) -> Path:
     """Renvoie (et crée) le dossier d'un profil."""
-    path = profiles_root() / slugify(name)
+    path = profiles_root() / store.slugify(name)
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -62,7 +62,7 @@ def delete_profile(name: str) -> bool:
     """Supprime un profil (refuse de supprimer le dernier restant)."""
     if len(list_profiles()) <= 1:
         return False
-    target = profiles_root() / slugify(name)
+    target = profiles_root() / store.slugify(name)
     if target.exists():
         shutil.rmtree(target, ignore_errors=True)
         return True
