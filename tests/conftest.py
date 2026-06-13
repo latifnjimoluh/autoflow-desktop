@@ -8,6 +8,22 @@ import pytest
 
 # Importe le paquet d'actions pour peupler le registre.
 import autoflow.core.actions  # noqa: F401
+from autoflow.persistence import store
+
+
+@pytest.fixture(autouse=True)
+def isolated_store(tmp_path_factory, monkeypatch):
+    """Redirige le stockage des workflows vers un dossier temporaire.
+
+    Évite que les tests (notamment GUI, qui sauvegardent à la fermeture) ne
+    polluent le vrai dossier de données utilisateur.
+    """
+    base = tmp_path_factory.mktemp("autoflow_data")
+    wf_dir = base / "workflows"
+    wf_dir.mkdir()
+    monkeypatch.setattr(store, "data_dir", lambda: base)
+    monkeypatch.setattr(store, "workflows_dir", lambda: wf_dir)
+    return base
 
 
 @pytest.fixture
