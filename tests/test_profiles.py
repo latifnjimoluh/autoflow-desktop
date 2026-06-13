@@ -28,6 +28,7 @@ def test_workflows_isoles_par_profil():
 
 
 def test_suppression_profil():
+    profiles.create_profile("Garde")  # garantit qu'il restera un profil
     profiles.create_profile("Temporaire")
     assert profiles.delete_profile("Temporaire") is True
     assert "Temporaire" not in profiles.list_profiles()
