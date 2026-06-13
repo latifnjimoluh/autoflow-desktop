@@ -35,7 +35,12 @@ class ActionEditorPanel(QWidget):
 
         # Bouton « Ajouter une action » avec menu déroulant par catégorie.
         self._add_button = QToolButton()
-        self._add_button.setText("Ajouter une action ▾")
+        self._add_button.setText("➕  Ajouter une action  ▾")
+        self._add_button.setProperty("accent", "true")
+        self._add_button.setStyleSheet(
+            "QToolButton[accent=\"true\"] { background:#6c8cff; color:#fff;"
+            " border:none; border-radius:7px; padding:8px 14px; font-weight:600; }"
+            "QToolButton[accent=\"true\"]:hover { background:#809cff; }")
         self._add_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self._add_button.setMenu(self._build_add_menu())
         layout.addWidget(self._add_button)
@@ -77,11 +82,14 @@ class ActionEditorPanel(QWidget):
 
     def set_actions(self, actions: list[Action], current: int = -1) -> None:
         """Affiche la séquence d'actions avec leur résumé et leur état."""
+        from .icons import action_icon
+
         self.list.blockSignals(True)
         self.list.clear()
         for action in actions:
+            icon = action_icon(action.type_name, getattr(action, "category", "Général"))
             prefixe = "" if action.enabled else "✕ "
-            item = QListWidgetItem(f"{prefixe}{action.summary()}")
+            item = QListWidgetItem(f"{prefixe}{icon}  {action.summary()}")
             if not action.enabled:
                 item.setForeground(item.foreground())  # gris géré par le style
                 font = item.font()

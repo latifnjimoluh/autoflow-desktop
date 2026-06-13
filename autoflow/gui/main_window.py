@@ -243,6 +243,14 @@ class MainWindow(QMainWindow):
         self.act_save.triggered.connect(self._save_current)
         for act in (self.act_start, self.act_pause, self.act_step, self.act_stop, self.act_save):
             toolbar.addAction(act)
+        # Met en valeur le bouton « Démarrer » (couleur de succès).
+        start_btn = toolbar.widgetForAction(self.act_start)
+        if start_btn is not None:
+            start_btn.setStyleSheet(
+                "QToolButton { background:#2ea043; color:#fff; border:none;"
+                " border-radius:7px; padding:6px 14px; font-weight:600; }"
+                "QToolButton:hover { background:#3fb950; }"
+                "QToolButton:disabled { background:#3a3d47; color:#8a90a0; }")
 
         self.step_chk = QCheckBox("Pas à pas")
         toolbar.addWidget(self.step_chk)

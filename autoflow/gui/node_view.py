@@ -13,7 +13,7 @@ visuelle de ``workflow.actions``, pas un graphe libre.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QFrame,
     QGraphicsScene,
@@ -28,10 +28,12 @@ from PySide6.QtWidgets import (
 
 from ..core.actions.base import Action
 from .icons import action_icon
+from .theme import palette
 
 _CARD_WIDTH = 340
 _X = 40
 _GAP = 26
+_PALETTE = palette("dark")
 
 
 def _safe_summary(action: Action) -> str:
@@ -51,12 +53,16 @@ class _NodeCard(QFrame):
         self.setFixedWidth(_CARD_WIDTH)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         enabled = getattr(action, "enabled", True)
-        border = "#4c8bf5" if enabled else "#888"
-        bg = "#2b2b2b" if enabled else "#1f1f1f"
+        p = _PALETTE
+        border = p["accent"] if enabled else p["border"]
+        bg = p["surface"] if enabled else p["surface_alt"]
         self.setStyleSheet(
-            f"#nodeCard {{ border: 2px solid {border}; border-radius: 10px; "
-            f"background: {bg}; }}")
+            f"#nodeCard {{ border: 1px solid {border}; border-left: 4px solid {border}; "
+            f"border-radius: 10px; background: {bg}; }}"
+            f"#nodeCard:hover {{ border-color: {p['accent_hover']}; "
+            f"border-left-color: {p['accent_hover']}; }}")
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(14, 10, 14, 10)
 
         header = QHBoxLayout()
         icon = action_icon(action.type_name, getattr(action, "category", "Général"))
@@ -64,14 +70,14 @@ class _NodeCard(QFrame):
         title.setTextFormat(Qt.TextFormat.RichText)
         header.addWidget(title, 1)
         dot = QLabel("●")
-        dot.setStyleSheet(f"color: {'#5cd65c' if enabled else '#888'};")
+        dot.setStyleSheet(f"color: {p['success'] if enabled else p['muted']};")
         dot.setToolTip("Activée" if enabled else "Désactivée")
         header.addWidget(dot)
         layout.addLayout(header)
 
         summary = QLabel(_safe_summary(action))
         summary.setWordWrap(True)
-        summary.setStyleSheet("color: #ddd;")
+        summary.setStyleSheet(f"color: {p['muted']};")
         layout.addWidget(summary)
 
         # Branches / corps pour les conteneurs (condition, boucle).
@@ -80,7 +86,7 @@ class _NodeCard(QFrame):
             desc = " · ".join(f"{name.capitalize()} : {len(acts)}"
                               for name, acts in groups.items())
             branch = QLabel("↳ " + desc)
-            branch.setStyleSheet("color: #9ad;")
+            branch.setStyleSheet(f"color: {_PALETTE['accent']};")
             layout.addWidget(branch)
 
         edit_btn = QPushButton("⚙ Configurer")
@@ -108,6 +114,8 @@ class NodeView(QGraphicsView):
         self.setScene(self._scene)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.setBackgroundBrush(QColor(_PALETTE["window"]))
+        self.setFrameShape(QGraphicsView.Shape.NoFrame)
         self._zoom = 1.0
         self._actions: list[Action] = []
 
@@ -120,7 +128,7 @@ class NodeView(QGraphicsView):
 
         # Carte de départ (point d'entrée du flux).
         start = QLabel("  ▶  Début du workflow")
-        start.setStyleSheet("color: #5cd65c; font-weight: bold;")
+        start.setStyleSheet(f"color: {_PALETTE['success']}; font-weight: bold;")
         self._scene.addWidget(start).setPos(_X, y)
         y += 32
 
@@ -136,7 +144,7 @@ class NodeView(QGraphicsView):
             y = self._add_plus(i + 1, y)
 
         end = QLabel("  ⛔  Fin du workflow")
-        end.setStyleSheet("color: #d66; font-weight: bold;")
+        end.setStyleSheet(f"color: {_PALETTE['danger']}; font-weight: bold;")
         self._scene.addWidget(end).setPos(_X, y)
         y += 40
 
@@ -159,8 +167,10 @@ class NodeView(QGraphicsView):
 
     def _draw_connector(self, y: int) -> None:
         """Trace un petit connecteur vertical entre deux étapes."""
+        pen = QPen(QColor(_PALETTE["border_strong"]))
+        pen.setWidth(2)
         self._scene.addLine(_X + _CARD_WIDTH / 2, y - 8,
-                            _X + _CARD_WIDTH / 2, y + 2)
+                            _X + _CARD_WIDTH / 2, y + 2, pen)
 
     # -- Pan / zoom --------------------------------------------------------
     def wheelEvent(self, event) -> None:  # noqa: N802

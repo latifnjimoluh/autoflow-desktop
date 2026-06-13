@@ -72,6 +72,7 @@ class TemplateGallery(QDialog):
         buttons = QDialogButtonBox()
         self.use_btn = buttons.addButton("Utiliser ce modèle",
                                          QDialogButtonBox.ButtonRole.AcceptRole)
+        self.use_btn.setProperty("accent", "true")
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel)
         self.use_btn.clicked.connect(self._use)
         buttons.rejected.connect(self.reject)

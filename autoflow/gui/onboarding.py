@@ -54,12 +54,13 @@ class WelcomeDialog(QDialog):
 
         btn_gallery = QPushButton("📚  Partir d'un modèle prêt à l'emploi")
         btn_gallery.clicked.connect(lambda: self._pick(self.GALLERY))
+        btn_gallery.setProperty("accent", "true")
         btn_wizard = QPushButton("🧭  Être guidé pas à pas (assistant)")
         btn_wizard.clicked.connect(lambda: self._pick(self.WIZARD))
         btn_scratch = QPushButton("✏  Créer un workflow vide")
         btn_scratch.clicked.connect(lambda: self._pick(self.SCRATCH))
         for btn in (btn_gallery, btn_wizard, btn_scratch):
-            btn.setMinimumHeight(44)
+            btn.setMinimumHeight(46)
             layout.addWidget(btn)
         layout.addStretch(1)
 

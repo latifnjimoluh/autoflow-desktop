@@ -102,6 +102,7 @@ class ParamPanel(QWidget):
         if self.services.test_runner is not None:
             test_btn = QPushButton("▶ Tester cette action")
             test_btn.setToolTip("Exécute uniquement cette action pour voir le résultat.")
+            test_btn.setProperty("accent", "true")
             test_btn.clicked.connect(self._test_action)
             layout.addWidget(test_btn)
 
