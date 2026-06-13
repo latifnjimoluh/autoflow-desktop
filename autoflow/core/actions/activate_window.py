@@ -39,7 +39,7 @@ class ActivateWindowAction(Action):
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         self.validate()
         found = windows.activate(
-            title=str(self.params["title"]),
+            title=str(self._resolve(self.params["title"], context)),
             match=str(self.params.get("match", "contains")),
             force_foreground=bool(self.params.get("force_foreground", False)),
         )

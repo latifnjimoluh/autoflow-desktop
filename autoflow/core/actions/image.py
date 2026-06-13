@@ -8,6 +8,14 @@ from ..registry import register
 from .base import Action, ParamSpec
 
 
+def _locate(path: str, confidence: float, inputs, context):
+    """Localise une image via OpenCV si disponible, sinon via pyautogui."""
+    vision = (context or {}).get("vision")
+    if vision is not None and vision.is_available():
+        return vision.locate_center(path, confidence=confidence)
+    return inputs.locate_center(path, confidence=confidence)
+
+
 @register
 class WaitForImageAction(Action):
     """Attend qu'une image apparaisse à l'écran (automatisation conditionnelle)."""
@@ -35,9 +43,10 @@ class WaitForImageAction(Action):
         elapsed = 0.0
         step = 0.5
         while elapsed <= deadline:
-            location = inputs.locate_center(
+            location = _locate(
                 str(self.params["path"]),
-                confidence=float(self.params.get("confidence", 0.9)),
+                float(self.params.get("confidence", 0.9)),
+                inputs, context,
             )
             if location is not None:
                 if context is not None:
@@ -77,9 +86,10 @@ class ClickImageAction(Action):
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         self.validate()
-        location = inputs.locate_center(
+        location = _locate(
             str(self.params["path"]),
-            confidence=float(self.params.get("confidence", 0.9)),
+            float(self.params.get("confidence", 0.9)),
+            inputs, context,
         )
         if location is None:
             log = (context or {}).get("log")

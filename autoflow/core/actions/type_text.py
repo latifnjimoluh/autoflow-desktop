@@ -30,7 +30,7 @@ class TypeTextAction(Action):
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         self.validate()
         return inputs.type_text(
-            str(self.params.get("text", "")),
+            str(self._resolve(self.params.get("text", ""), context)),
             interval=float(self.params.get("interval", 0.0)),
         )
 
