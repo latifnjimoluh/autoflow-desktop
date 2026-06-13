@@ -20,6 +20,7 @@ SCHEDULE_MODES = (
     "repeat_n",
     "at_time",
     "hotkey_trigger",
+    "cron",
 )
 
 
@@ -40,6 +41,9 @@ class Schedule:
     max_iterations: int = 0
     at_time: str = "08:00"
     hotkey: str = "ctrl+shift+r"
+    cron: str = ""
+    days: list[str] = field(default_factory=list)
+    times: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.mode not in SCHEDULE_MODES:
@@ -53,6 +57,9 @@ class Schedule:
             "max_iterations": self.max_iterations,
             "at_time": self.at_time,
             "hotkey": self.hotkey,
+            "cron": self.cron,
+            "days": list(self.days),
+            "times": list(self.times),
         }
 
     @classmethod
@@ -65,6 +72,9 @@ class Schedule:
             max_iterations=int(data.get("max_iterations", 0)),
             at_time=str(data.get("at_time", "08:00")),
             hotkey=str(data.get("hotkey", "ctrl+shift+r")),
+            cron=str(data.get("cron", "")),
+            days=list(data.get("days", [])),
+            times=list(data.get("times", [])),
         )
 
 

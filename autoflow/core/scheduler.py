@@ -25,7 +25,7 @@ class Scheduler:
     def total_iterations(self) -> int | None:
         """Nombre total d'itérations prévues (``None`` = infini)."""
         mode = self.schedule.mode
-        if mode in ("run_once", "at_time", "hotkey_trigger"):
+        if mode in ("run_once", "at_time", "hotkey_trigger", "cron"):
             return 1
         if mode == "repeat_n":
             return max(1, int(self.schedule.max_iterations or 1))
