@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.spec
+
+# Tests / couverture
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Données utilisateur AutoFlow (ne pas committer)
+.autoflow/
+
+# IDE / éditeurs
+.idea/
+.vscode/
+*.swp
+
+# Captures d'écran générées par les workflows
+screenshots/
+*.png.tmp
+
+# OS
+.DS_Store
+Thumbs.db
