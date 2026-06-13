@@ -17,6 +17,9 @@ dependencies = [
     "PyGetWindow>=0.0.9",
     "pynput>=1.7.6",
     "platformdirs>=4.0",
+    "APScheduler>=3.10",
+    "opencv-python>=4.8",
+    "pytesseract>=0.3.10",
 ]
 
 [project.optional-dependencies]
