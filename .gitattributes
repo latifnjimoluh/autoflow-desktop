@@ -1,0 +1,3 @@
+# Normalisation des fins de ligne (évite les avertissements CRLF/LF).
+* text=auto eol=lf
+*.png binary
