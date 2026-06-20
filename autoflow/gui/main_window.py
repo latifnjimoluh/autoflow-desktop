@@ -62,6 +62,10 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("AutoFlow — automatisation visuelle du PC")
         self.resize(1180, 760)
+        from ..ui.branding import app_icon
+        _icon = app_icon(256)
+        if _icon is not None:
+            self.setWindowIcon(_icon)
 
         self.settings = load_settings()
         self.inputs = InputBackend(failsafe=self.settings.failsafe,
@@ -243,14 +247,9 @@ class MainWindow(QMainWindow):
         self.act_save.triggered.connect(self._save_current)
         for act in (self.act_start, self.act_pause, self.act_step, self.act_stop, self.act_save):
             toolbar.addAction(act)
-        # Met en valeur le bouton « Démarrer » (couleur de succès).
-        start_btn = toolbar.widgetForAction(self.act_start)
-        if start_btn is not None:
-            start_btn.setStyleSheet(
-                "QToolButton { background:#2ea043; color:#fff; border:none;"
-                " border-radius:7px; padding:6px 14px; font-weight:600; }"
-                "QToolButton:hover { background:#3fb950; }"
-                "QToolButton:disabled { background:#3a3d47; color:#8a90a0; }")
+        # Met en valeur le bouton « Démarrer » (couleur de succès, issue des tokens).
+        self._start_btn = toolbar.widgetForAction(self.act_start)
+        self._style_start_button()
 
         self.step_chk = QCheckBox("Pas à pas")
         toolbar.addWidget(self.step_chk)
@@ -279,13 +278,54 @@ class MainWindow(QMainWindow):
         act_export_py.triggered.connect(self._export_python)
         for act in (act_gallery, act_settings, act_history, act_export_py):
             toolbar.addAction(act)
+        toolbar.addSeparator()
+
+        act_theme = QAction(tr("toggle_theme", lang), self)
+        act_theme.setToolTip("Basculer le thème clair / sombre")
+        act_theme.triggered.connect(self._toggle_theme)
+        act_about = QAction("ℹ " + tr("about", lang), self)
+        act_about.triggered.connect(self._open_about)
+        toolbar.addAction(act_theme)
+        toolbar.addAction(act_about)
+
+    def _style_start_button(self) -> None:
+        """Stylise le bouton « Démarrer » à partir des tokens du thème courant."""
+        from .theme import palette
+
+        btn = getattr(self, "_start_btn", None)
+        if btn is None:
+            return
+        p = palette()
+        btn.setStyleSheet(
+            f"QToolButton {{ background:{p['success']}; color:{p['on_accent']};"
+            f" border:none; border-radius:8px; padding:7px 15px; font-weight:600; }}"
+            f"QToolButton:hover {{ background:{p['success']}; }}"
+            f"QToolButton:disabled {{ background:{p['surface_alt']};"
+            f" color:{p['muted']}; }}")
+
+    def _toggle_theme(self) -> None:
+        """Bascule clair ⇄ sombre à chaud et persiste le choix."""
+        new_theme = "light" if self.settings.theme == "dark" else "dark"
+        self.settings.theme = new_theme
+        save_settings(self.settings)
+        self._apply_theme()
+        self.log_console.append_log(
+            f"Thème basculé sur « {new_theme} ».", "info")
+
+    def _open_about(self) -> None:
+        """Ouvre la fenêtre « À propos » d'AutoFlow."""
+        from .about_dialog import AboutDialog
+
+        AboutDialog(self).exec()
 
     def _build_tray(self) -> None:
         """Crée l'icône de la barre des tâches (si disponible)."""
         self.tray = None
         if not QSystemTrayIcon.isSystemTrayAvailable():
             return
-        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
+        from ..ui.branding import app_icon
+        icon = app_icon(64) or self.style().standardIcon(
+            QStyle.StandardPixmap.SP_ComputerIcon)
         self.tray = QSystemTrayIcon(icon, self)
         self.tray.setToolTip("AutoFlow")
         menu = QMenu()
@@ -803,6 +843,11 @@ class MainWindow(QMainWindow):
         app = QApplication.instance()
         if app is not None:
             apply_theme(app, self.settings.theme)
+        # Rafraîchit les surfaces peintes à la main (non couvertes par le QSS).
+        self.log_console.refresh_theme()
+        self._style_start_button()
+        if self._views.currentIndex() == 1:
+            self._refresh_node_view()
 
     def _apply_autostart(self) -> None:
         if self.settings.autostart:

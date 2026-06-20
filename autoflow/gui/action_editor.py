@@ -36,11 +36,8 @@ class ActionEditorPanel(QWidget):
         # Bouton « Ajouter une action » avec menu déroulant par catégorie.
         self._add_button = QToolButton()
         self._add_button.setText("➕  Ajouter une action  ▾")
+        # Styling via la propriété dynamique « accent » (QSS global, tokens).
         self._add_button.setProperty("accent", "true")
-        self._add_button.setStyleSheet(
-            "QToolButton[accent=\"true\"] { background:#6c8cff; color:#fff;"
-            " border:none; border-radius:7px; padding:8px 14px; font-weight:600; }"
-            "QToolButton[accent=\"true\"]:hover { background:#809cff; }")
         self._add_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self._add_button.setMenu(self._build_add_menu())
         layout.addWidget(self._add_button)

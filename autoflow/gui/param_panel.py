@@ -96,7 +96,7 @@ class ParamPanel(QWidget):
         if doc:
             help_label = QLabel(doc)
             help_label.setWordWrap(True)
-            help_label.setStyleSheet("color: gray;")
+            help_label.setProperty("variant", "muted")
             layout.addWidget(help_label)
 
         if self.services.test_runner is not None:
@@ -156,7 +156,7 @@ class ParamPanel(QWidget):
         if spec.help:
             hint = QLabel(spec.help)
             hint.setWordWrap(True)
-            hint.setStyleSheet("color: gray; font-size: 11px;")
+            hint.setProperty("variant", "caption")
             box.addWidget(hint)
         return row
 
@@ -173,14 +173,18 @@ class ParamPanel(QWidget):
 
         if t == "int":
             widget = QSpinBox()
-            widget.setRange(-1_000_000, 1_000_000)
+            min_v = spec.min_value if spec.min_value is not None else -1_000_000
+            max_v = spec.max_value if spec.max_value is not None else 1_000_000
+            widget.setRange(int(min_v), int(max_v))
             widget.setValue(int(value or 0))
             widget.valueChanged.connect(lambda v, n=spec.name: self._update(n, int(v)))
             return widget
 
         if t == "float":
             widget = QDoubleSpinBox()
-            widget.setRange(-1_000_000.0, 1_000_000.0)
+            min_v = spec.min_value if spec.min_value is not None else -1_000_000.0
+            max_v = spec.max_value if spec.max_value is not None else 1_000_000.0
+            widget.setRange(float(min_v), float(max_v))
             widget.setDecimals(3)
             widget.setSingleStep(0.1)
             widget.setValue(float(value or 0.0))
