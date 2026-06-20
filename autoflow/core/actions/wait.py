@@ -23,16 +23,20 @@ class WaitAction(Action):
     @classmethod
     def param_specs(cls) -> list[ParamSpec]:
         return [
-            ParamSpec("seconds", "Secondes", "float", 1.0),
+            ParamSpec("seconds", "Secondes", "float", 1.0, min_value=0.0),
         ]
 
     def validate(self) -> None:
-        if self._require_number("seconds") < 0:
-            raise ValueError("La durée d'attente ne peut pas être négative.")
+        try:
+            val = float(self.params.get("seconds", 0.0))
+            if val < 0:
+                raise ValueError(f"La durée d'attente ne peut pas être négative ({val}).")
+        except (TypeError, ValueError):
+            raise ValueError("La durée d'attente doit être un nombre valide.")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
-        self.validate()
-        seconds = float(self.params.get("seconds", 0.0))
+        # On redresse au cas où (sécurité exécution).
+        seconds = max(0.0, float(self.params.get("seconds", 0.0)))
         sleeper = (context or {}).get("sleep")
         if callable(sleeper):
             sleeper(seconds)

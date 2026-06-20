@@ -27,7 +27,7 @@ class ClickAction(Action):
             ParamSpec("y", "Y", "int", 0, depends_on=("use_current", False)),
             ParamSpec("button", "Bouton de la souris", "choice", "left",
                       choices=["left", "right", "middle"]),
-            ParamSpec("clicks", "Nombre de clics", "int", 1,
+            ParamSpec("clicks", "Nombre de clics", "int", 1, min_value=1,
                       help="1 = simple clic, 2 = double clic."),
         ]
 

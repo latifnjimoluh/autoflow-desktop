@@ -23,7 +23,7 @@ class DragAction(Action):
             ParamSpec("y1", "Y départ", "int", 0),
             ParamSpec("x2", "X arrivée", "int", 0),
             ParamSpec("y2", "Y arrivée", "int", 0),
-            ParamSpec("duration", "Durée (s)", "float", 0.5),
+            ParamSpec("duration", "Durée (s)", "float", 0.5, min_value=0.0),
             ParamSpec("button", "Bouton", "choice", "left",
                       choices=["left", "right", "middle"]),
         ]
@@ -35,13 +35,14 @@ class DragAction(Action):
             raise ValueError("La durée ne peut pas être négative.")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
-        self.validate()
+        # On redresse au cas où (sécurité exécution).
+        duration = max(0.0, float(self.params.get("duration", 0.5)))
         return inputs.drag_to(
             int(self.params["x1"]),
             int(self.params["y1"]),
             int(self.params["x2"]),
             int(self.params["y2"]),
-            duration=float(self.params.get("duration", 0.5)),
+            duration=duration,
             button=str(self.params.get("button", "left")),
         )
 

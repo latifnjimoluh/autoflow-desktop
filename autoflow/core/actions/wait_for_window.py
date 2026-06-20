@@ -25,7 +25,7 @@ class WaitForWindowAction(Action):
                            "fragment de titre à attendre."),
             ParamSpec("match", "Correspondance du titre", "choice", "contains",
                       choices=["contains", "exact"]),
-            ParamSpec("timeout", "Délai maximum d'attente (s)", "float", 10.0),
+            ParamSpec("timeout", "Délai maximum d'attente (s)", "float", 10.0, min_value=0.1),
         ]
 
     def validate(self) -> None:
@@ -35,11 +35,12 @@ class WaitForWindowAction(Action):
             raise ValueError("Le délai d'attente doit être positif.")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
-        self.validate()
+        # On redresse au cas où (sécurité exécution).
+        timeout = max(0.1, float(self.params.get("timeout", 10.0)))
         found = windows.wait_for_window(
             title=str(self.params["title"]),
             match=str(self.params.get("match", "contains")),
-            timeout=float(self.params.get("timeout", 10.0)),
+            timeout=timeout,
             sleep=(context or {}).get("sleep"),
         )
         if not found:

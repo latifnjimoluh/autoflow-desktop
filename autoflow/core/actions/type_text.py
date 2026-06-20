@@ -26,16 +26,22 @@ class TypeTextAction(Action):
                       help="Colle le texte instantanément au lieu de le taper "
                            "caractère par caractère."),
             ParamSpec("interval", "Vitesse : intervalle entre caractères (s)",
-                      "float", 0.0, depends_on=("paste", False)),
+                      "float", 0.0, depends_on=("paste", False), min_value=0.0),
         ]
 
     def validate(self) -> None:
-        if float(self.params.get("interval", 0.0)) < 0:
-            raise ValueError("L'intervalle ne peut pas être négatif.")
+        try:
+            val = float(self.params.get("interval", 0.0))
+            if val < 0:
+                raise ValueError(f"L'intervalle ne peut pas être négatif ({val}).")
+        except (TypeError, ValueError):
+            raise ValueError("L'intervalle doit être un nombre valide.")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
-        self.validate()
+        # On valide, mais on redresse au cas où (sécurité exécution).
         text = str(self._resolve(self.params.get("text", ""), context))
+        interval = max(0.0, float(self.params.get("interval", 0.0)))
+
         if self.params.get("paste"):
             clip = (context or {}).get("clipboard")
             if clip is not None:
@@ -43,7 +49,7 @@ class TypeTextAction(Action):
                 return inputs.hotkey(["ctrl", "v"])
         return inputs.type_text(
             text,
-            interval=float(self.params.get("interval", 0.0)),
+            interval=interval,
         )
 
     def summary(self) -> str:

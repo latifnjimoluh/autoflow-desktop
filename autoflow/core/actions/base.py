@@ -45,6 +45,8 @@ class ParamSpec:
     placeholder: str = ""
     supports_vars: bool = False
     depends_on: tuple[str, Any] | None = None
+    min_value: float | int | None = None
+    max_value: float | int | None = None
 
 
 class Action(abc.ABC):

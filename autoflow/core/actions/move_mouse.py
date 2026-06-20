@@ -21,7 +21,7 @@ class MoveMouseAction(Action):
         return [
             ParamSpec("x", "X", "int", 0),
             ParamSpec("y", "Y", "int", 0),
-            ParamSpec("duration", "Durée (s)", "float", 0.0,
+            ParamSpec("duration", "Durée (s)", "float", 0.0, min_value=0.0,
                       help="Durée du déplacement ; 0 = instantané."),
         ]
 
@@ -32,11 +32,12 @@ class MoveMouseAction(Action):
             raise ValueError("La durée ne peut pas être négative.")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
-        self.validate()
+        # On redresse au cas où (sécurité exécution).
+        duration = max(0.0, float(self.params.get("duration", 0.0)))
         return inputs.move_to(
             int(self.params["x"]),
             int(self.params["y"]),
-            duration=float(self.params.get("duration", 0.0)),
+            duration=duration,
         )
 
     def summary(self) -> str:
