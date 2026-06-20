@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="AutoFlow">
+  <defs>
+    <linearGradient id="af" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6D5EF0"/>
+      <stop offset="1" stop-color="#4E42C9"/>
+    </linearGradient>
+  </defs>
+  <rect x="15" y="15" width="226" height="226" rx="56" ry="56" fill="url(#af)"/>
+  <polygon fill="#FFFFFF" points="143,51 87,138 123,138 113,205 169,118 133,118"/>
+</svg>
