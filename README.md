@@ -269,6 +269,37 @@ prêt à éditer.
 > anciens workflows « plats » se chargent et s'exécutent sans modification
 > (vérifié par un test dédié).
 
+## 🎨 Design visuel v4 — système de design & thèmes
+
+AutoFlow s'appuie sur un **système de design à tokens** (source unique de
+vérité, `autoflow/ui/theme/`) : **aucune couleur n'est codée en dur** dans les
+widgets, tout dérive des tokens. Le résultat vise un produit **moderne, calme et
+cohérent**, entre la toile à nœuds de **n8n** et le minimalisme de
+**Linear / Raycast**.
+
+- **Identité** : une seule couleur d'accent affirmée — **indigo `#6D5EF0`** —,
+  géométrie arrondie, espaces généreux (base 8), élévation douce.
+- **Deux thèmes complets** (sombre par défaut + clair tout aussi abouti),
+  **basculables à chaud** via le bouton **🌓 Thème** de la barre d'outils (le
+  choix est persisté ; réglable aussi dans **⚙ Réglages**). Toute l'app suit la
+  bascule, y compris la **toile à nœuds** et la **console de logs** monospace.
+- **Composants soignés** dans tous leurs états (normal / survol / focus / actif /
+  désactivé) : boutons (primaire, fantôme, danger), champs avec focus à l'accent
+  et état d'erreur, listes, onglets, menus, barres de défilement fines, infobulles.
+- **Toile à nœuds** : cartes à **liseré de couleur par catégorie**, **pastille
+  d'état**, connecteurs en courbes, **fond quadrillé** discret, pan/zoom.
+- **Accessibilité** : focus clavier visible ; les états sémantiques ne reposent
+  **jamais sur la seule couleur** (glyphe + libellé) — sûr pour le daltonisme.
+- **Identité applicative** : icône peinte (fenêtre + barre des tâches) et fenêtre
+  **ℹ À propos** (version, lien dépôt).
+
+> **Polices** : Inter (interface) et JetBrains Mono (logs) sont chargées si
+> présentes dans `autoflow/ui/theme/assets/fonts/` (100 % hors-ligne) ; sinon
+> repli automatique sur `Segoe UI` / `Consolas`.
+>
+> **Captures** : `QT_QPA_PLATFORM=offscreen python scripts/capture_screens.py`
+> génère des aperçus des deux thèmes dans `docs/images/`.
+
 ## Licence
 
 Distribué sous licence **MIT** — voir [LICENSE](LICENSE).

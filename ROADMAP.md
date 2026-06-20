@@ -237,3 +237,80 @@ atomiques poussés ; rapport final.
    `PATH`. Fonction paramétrable (racines injectables) pour les tests.
 3. **Vue en nœuds** : disposition en **flux vertical** (pas un graphe libre
    arbitraire), pour rester lisible et cohérente avec le modèle de données.
+
+---
+
+## 9. Design visuel v4 — système de design & interface professionnelle
+
+> **Objectif :** donner à AutoFlow l'apparence d'un **vrai produit** —
+> soignée, cohérente, intentionnelle — et bannir tout reste de « gris Qt par
+> défaut ». La couche visuelle est pilotée par un **système de tokens unique**
+> (source de vérité) ; **aucune couleur n'est codée en dur** dans les widgets.
+
+### 9.1 Direction artistique
+
+Esthétique **moderne, claire et « calme »**, à mi-chemin entre la convivialité
+de la toile à nœuds de **n8n** et le minimalisme raffiné de **Linear / Raycast** :
+
+- **Géométrie arrondie** (rayons 6/10/14, pilule), **espaces généreux** (base 8).
+- **Une seule couleur d'accent affirmée** : indigo **`#6D5EF0`** (états hover
+  `#5B4EE0`, actif `#4E42C9`) ; accent secondaire teal `#14B8A6` en surbrillance.
+- **Profondeur subtile** : 3 niveaux d'élévation douce (ombres via
+  `QGraphicsDropShadowEffect`, Qt n'ayant pas de `box-shadow`).
+- **Lisibilité avant tout** ; **sombre par défaut**, thème clair tout aussi abouti.
+
+### 9.2 Tokens (source unique de vérité) — `autoflow/ui/theme/tokens.py`
+
+| Groupe | Contenu |
+|---|---|
+| Accent | `accent`, `accent_hover`, `accent_active`, `accent_2`, `on_accent` |
+| Sémantiques | `success #22C55E`, `warning #F59E0B`, `error #EF4444`, `info #3B82F6` |
+| Surfaces (sombre) | `bg #0E0F13`, `surface #16181F`, `surface_alt/elevated #1E212B`, bordures, textes |
+| Surfaces (clair) | `bg #F7F8FA`, `surface #FFFFFF`, `surface_alt #F1F2F5`, bordures, textes |
+| Typographie | Inter (UI) + JetBrains Mono (logs), échelle Display→Mono, repli système |
+| Espacement | base 8 : 2,4,8,12,16,24,32,48 · Rayons 6/10/14/pilule · Élévation ×3 |
+| Catégories | couleur de liseré par catégorie d'action (nœuds) |
+
+`REQUIRED_TOKENS` garantit que **chaque** thème expose **toutes** les clés
+(vérifié par test). Des **alias rétro-compatibles** (`window`, `accent_pressed`,
+`danger`…) préservent l'ancien code.
+
+### 9.3 Architecture de thème (technique Qt)
+
+- **`ThemeManager`** (`autoflow/ui/theme/manager.py`) : charge les tokens,
+  **génère le QSS** (`qss.py`), l'applique à toute l'app et le **ré-applique à
+  chaud** (`set_theme` / `toggle`) ; émet `theme_changed`.
+- Sélecteurs QSS ciblant `objectName` et **propriétés dynamiques**
+  (`variant="primary|ghost|danger"`, `accent="true"`, `state="error"`, `badge=…`).
+- **Polices/icône embarquées** chargées au démarrage (`fonts.py`, `branding.py`),
+  fonctionnement **100 % hors-ligne** (repli système si fichiers absents).
+- `autoflow/gui/theme.py` devient un **pont** mince (`apply_theme`, `palette`,
+  `current_theme`, `tr`) délégant au `ThemeManager` — aucune couleur n'y reste.
+
+### 9.4 Phases
+
+- **Phase 1 — Fondations :** tokens + `ThemeManager` + QSS + polices/icône +
+  thèmes clair/sombre **basculables à chaud** (bouton barre d'outils 🌓). ✅
+- **Phase 2 — Composants :** style cohérent de **tous** les composants/états
+  (boutons primaire/fantôme/danger, champs, listes, onglets, scrollbars, menus,
+  dock, console monospace colorée par niveau), mise en page raffinée. ✅
+- **Phase 3 — Toile & finition :** nœuds à liseré de catégorie + pastille d'état,
+  connecteurs en courbes, fond quadrillé, zoom ; icône/À-propos ; accessibilité
+  (focus visible, états jamais portés par la seule couleur). ✅
+
+### 9.5 Tests (pragmatiques, `tests/test_theme_v4.py`)
+
+Cohérence des tokens par thème (aucune clé manquante), génération/cache du QSS,
+bascule `ThemeManager` clair⇄sombre sans crash, smoke GUI offscreen des panneaux
+refondus dans **les deux thèmes**, chargement des polices, icône d'app, élévation,
+fenêtre « À propos ». `palette()` suit le thème courant (bascule à chaud).
+
+### 9.6 Hypothèses v4
+
+1. **Polices non versionnées** (licences de redistribution) : déposées dans
+   `autoflow/ui/theme/assets/fonts/` au packaging ; sinon repli `Segoe UI`/`Consolas`.
+2. **Icône d'application peinte par programme** (indigo + éclair) — pas de binaire,
+   SVG équivalent dans `autoflow/ui/assets/logo.svg`.
+3. **Captures d'écran** générables à la demande via `scripts/capture_screens.py`
+   (rendu avec les polices système ; l'environnement headless affiche des
+   rectangles à la place des glyphes, sans incidence sur le rendu réel).
