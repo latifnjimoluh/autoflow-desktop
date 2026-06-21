@@ -12,10 +12,9 @@ def main() -> int:
     from autoflow.gui.main_window import MainWindow
     from autoflow.gui.theme import apply_theme
     from autoflow.settings import load_settings
-    from autoflow.utils.logging_setup import setup_logging
-
     from autoflow.ui.branding import app_icon
     from autoflow.ui.theme import load_embedded_fonts
+    from autoflow.utils.logging_setup import setup_logging
 
     setup_logging()
     app = QApplication.instance() or QApplication(sys.argv)

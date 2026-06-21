@@ -14,7 +14,9 @@ build/
 dist/
 *.egg-info/
 .eggs/
+# Specs PyInstaller générés, sauf le spec versionné d'AutoFlow (requis par la CI).
 *.spec
+!packaging/autoflow.spec
 
 # Tests / couverture
 .pytest_cache/
