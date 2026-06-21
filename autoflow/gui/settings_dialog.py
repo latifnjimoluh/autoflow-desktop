@@ -71,6 +71,10 @@ class SettingsDialog(QDialog):
         self.minimize.setChecked(settings.minimize_to_tray)
         form.addRow("Réduire dans la barre des tâches", self.minimize)
 
+        self.check_updates = QCheckBox()
+        self.check_updates.setChecked(settings.check_updates)
+        form.addRow("Vérifier les mises à jour au démarrage", self.check_updates)
+
         layout.addLayout(form)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -96,4 +100,5 @@ class SettingsDialog(QDialog):
         self.settings.notifications = self.notifications.isChecked()
         self.settings.autostart = self.autostart.isChecked()
         self.settings.minimize_to_tray = self.minimize.isChecked()
+        self.settings.check_updates = self.check_updates.isChecked()
         return self.settings

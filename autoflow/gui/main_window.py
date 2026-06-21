@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDockWidget,
-    QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
@@ -48,8 +47,8 @@ from .param_panel import ParamPanel
 from .schedule_panel import SchedulePanel
 from .settings_dialog import SettingsDialog
 from .theme import apply_theme, tr
-from .workflow_list import WorkflowListPanel
 from .worker import ExecutorWorker
+from .workflow_list import WorkflowListPanel
 
 
 class MainWindow(QMainWindow):
@@ -283,9 +282,13 @@ class MainWindow(QMainWindow):
         act_theme = QAction(tr("toggle_theme", lang), self)
         act_theme.setToolTip("Basculer le thème clair / sombre")
         act_theme.triggered.connect(self._toggle_theme)
+        act_updates = QAction("🔄 Mises à jour", self)
+        act_updates.setToolTip("Rechercher des mises à jour")
+        act_updates.triggered.connect(self._check_updates_manual)
         act_about = QAction("ℹ " + tr("about", lang), self)
         act_about.triggered.connect(self._open_about)
         toolbar.addAction(act_theme)
+        toolbar.addAction(act_updates)
         toolbar.addAction(act_about)
 
     def _style_start_button(self) -> None:
@@ -317,6 +320,74 @@ class MainWindow(QMainWindow):
         from .about_dialog import AboutDialog
 
         AboutDialog(self).exec()
+
+    # ------------------------------------------------------ mises à jour
+    def _start_update_check(self, manual: bool = False) -> None:
+        """Lance une vérification de mise à jour en arrière-plan (non bloquante)."""
+        from .update_dialog import UpdateChecker
+
+        existing = getattr(self, "_update_checker", None)
+        if existing is not None and existing.isRunning():
+            return
+        self._update_manual = manual
+        self._update_checker = UpdateChecker(parent=self)
+        self._update_checker.finished_check.connect(self._on_update_checked)
+        self._update_checker.start()
+
+    def _check_updates_manual(self) -> None:
+        """Bouton « Rechercher des mises à jour » (retour visible si à jour)."""
+        self.log_console.append_log("Recherche de mises à jour…", "info")
+        self._start_update_check(manual=True)
+
+    def _on_update_checked(self, info) -> None:
+        """Traite le résultat de la vérification (slot, thread UI)."""
+        manual = getattr(self, "_update_manual", False)
+        if info.error:
+            self.log_console.append_log(
+                f"Vérification des mises à jour impossible ({info.error}).", "warning")
+            if manual:
+                QMessageBox.information(
+                    self, "Mises à jour",
+                    "Impossible de vérifier les mises à jour pour le moment.\n"
+                    f"Détail : {info.error}")
+            return
+        if not info.available:
+            self.log_console.append_log("AutoFlow est à jour.", "info")
+            if manual:
+                QMessageBox.information(
+                    self, "Mises à jour",
+                    f"Vous utilisez la dernière version ({info.current}).")
+            return
+        self._propose_update(info)
+
+    def _propose_update(self, info) -> None:
+        """Affiche le dialogue de mise à jour et déclenche l'action choisie."""
+        from .update_dialog import UpdateDialog
+
+        self.log_console.append_log(
+            f"Mise à jour disponible : {info.latest}.", "action")
+        dialog = UpdateDialog(info, self)
+        if dialog.exec() and dialog.wants_install:
+            self._install_update(info)
+
+    def _install_update(self, info) -> None:
+        """Télécharge l'asset puis lance l'installeur et quitte l'application."""
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        from urllib.request import urlretrieve
+
+        try:
+            dest = Path(tempfile.gettempdir()) / (info.asset_name or "AutoFlow-setup")
+            urlretrieve(info.asset_url, dest)  # noqa: S310
+            subprocess.Popen([str(dest)])  # noqa: S603
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.warning(
+                self, "Mise à jour",
+                f"Le téléchargement a échoué : {exc}\n"
+                "Vous pouvez télécharger manuellement depuis la page des Releases.")
+            return
+        self._quit()
 
     def _build_tray(self) -> None:
         """Crée l'icône de la barre des tâches (si disponible)."""
@@ -554,7 +625,7 @@ class MainWindow(QMainWindow):
     # --------------------------------------------------- gestion des actions
     def _panel_services(self):
         """Construit les fournisseurs concrets branchés sur le panneau de params."""
-        from ..services import list_installed_apps, list_open_windows, test_action
+        from ..services import list_installed_apps, test_action
         from ..services.windows_list import window_titles
         from .param_panel import PanelServices
 
@@ -911,6 +982,12 @@ class MainWindow(QMainWindow):
             from PySide6.QtCore import QTimer
 
             QTimer.singleShot(0, self._maybe_onboard)
+        # Vérification de mise à jour au démarrage (une seule fois, si activée).
+        if self.settings.check_updates and not getattr(self, "_update_checked", False):
+            self._update_checked = True
+            from PySide6.QtCore import QTimer
+
+            QTimer.singleShot(1500, lambda: self._start_update_check(manual=False))
 
     def closeEvent(self, event) -> None:  # noqa: N802
         # Réduction dans la barre des tâches plutôt que fermeture.

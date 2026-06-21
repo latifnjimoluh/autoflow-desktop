@@ -7,7 +7,7 @@ d'urgence, chemin de Tesseract, thème, langue, notifications, démarrage auto.
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +23,7 @@ _DEFAULTS = {
     "minimize_to_tray": True,
     "active_profile": "Défaut",
     "onboarded": False,
+    "check_updates": True,
 }
 
 
@@ -41,13 +42,14 @@ class Settings:
     minimize_to_tray: bool = True
     active_profile: str = "Défaut"
     onboarded: bool = False
+    check_updates: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         """Sérialise les réglages."""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any] | None) -> "Settings":
+    def from_dict(cls, data: dict[str, Any] | None) -> Settings:
         """Reconstruit les réglages (champs inconnus ignorés, manquants = défaut)."""
         data = data or {}
         valid = {k: data.get(k, v) for k, v in _DEFAULTS.items()}
@@ -65,7 +67,7 @@ class Settings:
         return path
 
     @classmethod
-    def load(cls, path: str | Path) -> "Settings":
+    def load(cls, path: str | Path) -> Settings:
         """Charge les réglages depuis un fichier JSON (défauts si absent/illisible)."""
         path = Path(path)
         if not path.exists():
