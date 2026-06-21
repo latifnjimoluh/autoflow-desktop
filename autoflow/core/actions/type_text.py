@@ -32,10 +32,10 @@ class TypeTextAction(Action):
     def validate(self) -> None:
         try:
             val = float(self.params.get("interval", 0.0))
-            if val < 0:
-                raise ValueError(f"L'intervalle ne peut pas être négatif ({val}).")
         except (TypeError, ValueError):
-            raise ValueError("L'intervalle doit être un nombre valide.")
+            raise ValueError("L'intervalle doit être un nombre valide.") from None
+        if val < 0:
+            raise ValueError(f"L'intervalle ne peut pas être négatif ({val}).")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         # On valide, mais on redresse au cas où (sécurité exécution).

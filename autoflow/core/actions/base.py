@@ -7,7 +7,7 @@ permet à l'interface de générer automatiquement le formulaire d'édition.
 from __future__ import annotations
 
 import abc
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -105,7 +105,7 @@ class Action(abc.ABC):
             context : dictionnaire partagé entre actions d'une même exécution.
         """
 
-    def validate(self) -> None:
+    def validate(self) -> None:  # noqa: B027 — override optionnel, no-op par défaut
         """Valide les paramètres. Lève :class:`ValueError` si invalides."""
 
     # -- Présentation ------------------------------------------------------
@@ -138,7 +138,7 @@ class Action(abc.ABC):
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Action":
+    def from_dict(cls, data: dict[str, Any]) -> Action:
         """Reconstruit une action depuis un dictionnaire (compat. ascendante)."""
         return cls(
             params=data.get("params"),
@@ -151,7 +151,7 @@ class Action(abc.ABC):
         )
 
     # -- Contrôle de flux --------------------------------------------------
-    def child_groups(self) -> dict[str, list["Action"]]:
+    def child_groups(self) -> dict[str, list[Action]]:
         """Renvoie les groupes d'actions enfants (vide pour une action simple).
 
         Les actions de contrôle de flux (condition, boucle) surchargent cette

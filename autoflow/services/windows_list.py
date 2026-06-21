@@ -9,8 +9,9 @@ peut être injecté pour les tests, ce qui rend la fonction testable sans écran
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 
 @dataclass

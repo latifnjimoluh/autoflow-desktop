@@ -8,7 +8,7 @@ y compris pendant l'exécution d'un workflow.
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 
 def to_pynput_hotkey(combo: str) -> str:

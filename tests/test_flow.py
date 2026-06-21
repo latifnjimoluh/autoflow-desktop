@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from autoflow.core import registry
 from autoflow.core.executor import Executor
 from autoflow.models.workflow import Schedule, Workflow

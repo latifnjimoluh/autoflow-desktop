@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from autoflow.persistence import profiles, store
 from autoflow.models.workflow import Workflow
+from autoflow.persistence import profiles, store
 
 
 def test_profil_par_defaut_cree():

@@ -7,7 +7,8 @@ est importé **paresseusement** pour préserver l'import en environnement headle
 from __future__ import annotations
 
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .core.registry import create_action
 

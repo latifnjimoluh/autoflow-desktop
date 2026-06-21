@@ -13,14 +13,14 @@ if TYPE_CHECKING:  # pragma: no cover - uniquement pour le typage
     from .actions.base import Action
 
 # Registre interne : identifiant de type -> classe d'action.
-_REGISTRY: dict[str, type["Action"]] = {}
+_REGISTRY: dict[str, type[Action]] = {}
 
 
 class UnknownActionError(KeyError):
     """Levée lorsqu'un type d'action inconnu est demandé."""
 
 
-def register(cls: type["Action"]) -> type["Action"]:
+def register(cls: type[Action]) -> type[Action]:
     """Enregistre une classe d'action d'après son attribut ``type_name``.
 
     Utilisable comme décorateur de classe. Lève :class:`ValueError` si la classe
@@ -35,7 +35,7 @@ def register(cls: type["Action"]) -> type["Action"]:
     return cls
 
 
-def get_action_class(type_name: str) -> type["Action"]:
+def get_action_class(type_name: str) -> type[Action]:
     """Renvoie la classe associée à ``type_name`` ou lève ``UnknownActionError``."""
     try:
         return _REGISTRY[type_name]
@@ -51,13 +51,13 @@ def create_action(
     params: dict[str, Any] | None = None,
     enabled: bool = True,
     delay_after: float = 0.0,
-) -> "Action":
+) -> Action:
     """Instancie une action de type ``type_name`` avec les paramètres fournis."""
     cls = get_action_class(type_name)
     return cls(params=params, enabled=enabled, delay_after=delay_after)
 
 
-def action_from_dict(data: dict[str, Any]) -> "Action":
+def action_from_dict(data: dict[str, Any]) -> Action:
     """Reconstruit une action depuis sa forme sérialisée (dict)."""
     if "type" not in data:
         raise ValueError("Données d'action invalides : clé 'type' manquante.")
@@ -71,7 +71,7 @@ def available_types() -> list[tuple[str, str]]:
     return sorted(items, key=lambda item: item[1].lower())
 
 
-def all_classes() -> dict[str, type["Action"]]:
+def all_classes() -> dict[str, type[Action]]:
     """Renvoie une copie du registre (type_name -> classe)."""
     return dict(_REGISTRY)
 

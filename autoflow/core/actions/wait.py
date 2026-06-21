@@ -29,10 +29,10 @@ class WaitAction(Action):
     def validate(self) -> None:
         try:
             val = float(self.params.get("seconds", 0.0))
-            if val < 0:
-                raise ValueError(f"La durée d'attente ne peut pas être négative ({val}).")
         except (TypeError, ValueError):
-            raise ValueError("La durée d'attente doit être un nombre valide.")
+            raise ValueError("La durée d'attente doit être un nombre valide.") from None
+        if val < 0:
+            raise ValueError(f"La durée d'attente ne peut pas être négative ({val}).")
 
     def execute(self, inputs: Any, windows: Any, context: dict[str, Any]) -> Any:
         # On redresse au cas où (sécurité exécution).

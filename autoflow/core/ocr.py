@@ -7,8 +7,6 @@ message explicite. Le chemin du binaire est configurable.
 
 from __future__ import annotations
 
-from typing import Any
-
 
 class OcrBackend:
     """Extrait le texte d'une région de l'écran via Tesseract."""
@@ -33,8 +31,8 @@ class OcrBackend:
     def read_region(self, region: tuple[int, int, int, int] | None = None,
                     lang: str = "fra") -> str:
         """Capture une région et en renvoie le texte (chaîne vide si indisponible)."""
-        import pytesseract
         import pyautogui  # import paresseux
+        import pytesseract
 
         if self.tesseract_path:
             pytesseract.pytesseract.tesseract_cmd = self.tesseract_path

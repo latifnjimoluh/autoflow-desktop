@@ -86,7 +86,7 @@ class ConditionAction(Action):
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ConditionAction":
+    def from_dict(cls, data: dict[str, Any]) -> ConditionAction:
         action = cls(
             params=data.get("params"),
             enabled=data.get("enabled", True),
@@ -174,7 +174,7 @@ class LoopAction(Action):
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "LoopAction":
+    def from_dict(cls, data: dict[str, Any]) -> LoopAction:
         return cls(
             params=data.get("params"),
             enabled=data.get("enabled", True),

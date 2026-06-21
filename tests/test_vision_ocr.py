@@ -108,8 +108,9 @@ def test_parse_color_formats():
 
 
 def test_vision_backend_indisponible_sans_cv2(monkeypatch):
-    from autoflow.core.vision import VisionBackend
     import builtins
+
+    from autoflow.core.vision import VisionBackend
 
     real_import = builtins.__import__
 

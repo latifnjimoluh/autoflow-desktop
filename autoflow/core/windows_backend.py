@@ -10,7 +10,8 @@ en simulant un appui sur Alt, ainsi que la neutralisation du faux
 from __future__ import annotations
 
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 SW_RESTORE = 9
 _VK_MENU = 0x12  # touche Alt

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import threading
 
-import pytest
-
 from autoflow.core.executor import Executor
 from autoflow.models.workflow import Schedule, Workflow
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from autoflow.core import registry
-from autoflow.core.actions.base import Action
 
 
 @pytest.mark.parametrize("type_name", [name for name, _ in registry.available_types()])

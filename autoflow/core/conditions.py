@@ -75,7 +75,7 @@ def _pixel_matches(params, inputs) -> bool:
     target = _parse_color(params.get("color", "#000000"))
     tolerance = int(params.get("tolerance", 10))
     actual = inputs.pixel(x, y)
-    return all(abs(a - b) <= tolerance for a, b in zip(actual, target))
+    return all(abs(a - b) <= tolerance for a, b in zip(actual, target, strict=False))
 
 
 def _compare_variable(params, store, resolve) -> bool:

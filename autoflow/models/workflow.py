@@ -63,7 +63,7 @@ class Schedule:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any] | None) -> "Schedule":
+    def from_dict(cls, data: dict[str, Any] | None) -> Schedule:
         """Reconstruit un planning depuis un dictionnaire (tolère l'absence)."""
         data = data or {}
         return cls(
@@ -97,7 +97,7 @@ class Workflow:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Workflow":
+    def from_dict(cls, data: dict[str, Any]) -> Workflow:
         """Reconstruit un workflow depuis un dictionnaire."""
         return cls(
             name=str(data.get("name", "Nouveau workflow")),

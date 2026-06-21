@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 import autoflow.core.actions  # noqa: F401 - peuple le registre
 from autoflow.core import registry
 from autoflow.services import apps, keys, windows_list
+
 # Aliasé pour éviter que pytest ne collecte la fonction comme un test.
 from autoflow.services.test_action import test_action as run_action
 

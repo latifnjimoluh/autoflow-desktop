@@ -132,8 +132,9 @@ def test_export_python_action(app, tmp_path):
     window = MainWindow(autoload=False)
     window._add_action("type_text")
     wf = window._current()
-    from autoflow.core.export_python import export_to_file
     import ast
+
+    from autoflow.core.export_python import export_to_file
 
     chemin = export_to_file(wf, tmp_path / "wf.py")
     ast.parse(chemin.read_text(encoding="utf-8"))
