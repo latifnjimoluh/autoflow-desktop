@@ -386,3 +386,82 @@ dialogue de maj construit en offscreen. **Aucun test ne touche le réseau réel.
 3. **`GITHUB_REPO`** : déduit du remote, repli sur `latifnjimoluh/autoflow-desktop`.
 4. **Installeur Inno Setup** conservé en option ; l'`.exe`/zip reste l'artefact
    principal téléchargeable.
+
+---
+
+## 11. Fonctionnalités lot 2 — réactif, données & robustesse (20)
+
+> **Principe :** aucune dépendance serveur ni Docker — **JSON / SQLite intégré /
+> fichier local chiffré** (`cryptography`). Chaque action/déclencheur garde la
+> philosophie no-code (configuration concrète, rendu en nœud, résumé en langage
+> naturel). Les fonctions propres à Windows (ciblage UI, voix, contrôle système,
+> inactivité) **dégradent proprement** ailleurs (message clair, jamais de crash).
+> **Compatibilité ascendante garantie** : le format JSON des workflows est
+> **étendu**, jamais cassé (anciens workflows toujours chargeables, testé).
+
+### 11.1 Ajouts structurants (architecture)
+
+- **Déclencheurs événementiels** (`core/triggers/`) : registre/gestionnaire
+  parallèle au registre d'actions. Un *déclencheur* écoute un événement et
+  **démarre un workflow**. Complète la planification existante. Mockable/testé.
+- **Boucle « pour chaque »** (moteur) : itère une source de données en exposant
+  `item` et `index` comme variables dans le corps.
+- **Bloc try / en cas d'erreur** : groupe d'actions + branche alternative.
+- **File d'attente / exclusivité** (`services/run_queue.py`) : empêche le
+  chevauchement de deux exécutions (mode exclusif + file).
+
+### 11.2 Les 20 fonctionnalités (ordre d'implémentation)
+
+**Phase 1 — Socle réactif & données**
+- [x] 6. Boucle « pour chaque » (liste/variable, CSV/Excel, fichiers d'un dossier)
+- [x] 7. Lire / écrire **CSV & Excel** (`csv` stdlib, `openpyxl`)
+- [x] 8. Action **HTTP/API** (GET/POST/PUT/DELETE, `urllib`, extraction JSON)
+- [x] 9. **Texte & maths** : regex extraire/remplacer, découper/joindre, casse,
+      rogner ; opérations mathématiques (expression sûre) sur variables
+- [x] 10. **Variables globales** (JSON partagé) + **coffre de secrets** chiffré
+      (`cryptography`, fichier local)
+- [x] 1. Déclencheur **fenêtre** (apparition/fermeture/focus)
+- [x] 2. Déclencheur **fichier/dossier** (`watchdog`, motif, fichier en variable)
+- [x] 3. Déclencheur **presse-papiers** (changement, regex optionnelle)
+- [x] 4. Déclencheur **inactivité / session** (idle via `ctypes`)
+- [x] 5. Déclencheur **webhook** (serveur `http.server` local, corps JSON → vars)
+
+**Phase 2 — Robustesse & actions**
+- [x] 11. **Ciblage d'éléments d'interface** Windows (`pywinauto`/`uiautomation`)
+- [x] 12. **Bloc try / en cas d'erreur**
+- [x] 13. **Conditions composées ET/OU** (groupes de tests)
+- [x] 14. **File d'attente / exécution exclusive**
+- [x] 15. **Actions fichiers & dossiers** (créer/copier/déplacer/renommer/
+      supprimer, lire→variable, écrire/ajouter du texte)
+- [x] 16. **Action e-mail (SMTP)** (destinataire, sujet, corps, pièce jointe ;
+      identifiants via le coffre)
+- [x] 17. **Son & synthèse vocale** (bip/fichier ; `pyttsx3` hors-ligne)
+- [x] 18. **Saisie utilisateur** en cours d'exécution (valeur / oui-non / choix)
+- [x] 19. **Actions système** (volume, verrouiller, veille, éteindre/redémarrer
+      avec confirmation ; multi-moniteurs)
+
+**Phase 3 — Vue**
+- [x] 20. **Tableau de bord** (workflows, prochaines exécutions, exécutions
+      récentes, taux de succès) + **palette de commandes** (Ctrl+K)
+
+### 11.3 Choix techniques & hypothèses lot 2
+
+| Besoin | Choix | Justification |
+|---|---|---|
+| Déclencheurs | `core/triggers/` (base + registre + manager) | parallèle au registre d'actions, mockable |
+| Surveillance fichiers | `watchdog` (import paresseux) | standard, multi-OS |
+| HTTP | `urllib` (stdlib) | aucune dépendance ajoutée |
+| Excel / CSV | `openpyxl` / `csv` | classiques pip, pas de serveur |
+| Secrets | `cryptography` (Fernet) + clé locale | **fichier chiffré local**, aucun serveur |
+| Webhook | `http.server` (stdlib, thread) | local, activable/désactivable |
+| Inactivité | `ctypes` `GetLastInputInfo` | API Windows, dégradation ailleurs |
+| Ciblage UI | `pywinauto`/`uiautomation` (paresseux) | Windows ; repli message clair |
+| Voix | `pyttsx3` (paresseux) | hors-ligne ; dégradation si absent |
+| Maths | évaluateur d'expression **restreint** (AST) | pas d'`eval` brut (sécurité) |
+| Itération / try | actions de contrôle réutilisant `run_actions` | rétro-compatible |
+
+Hypothèses : (1) toute lib écran/réseau/OS est en **import paresseux** et
+**mockée** en test ; (2) les déclencheurs « live » nécessitent un environnement
+réel — leur **logique** est isolée et testée par simulation d'événement ;
+(3) le coffre stocke une clé dans le dossier de données utilisateur (chiffré),
+jamais en clair dans les workflows.

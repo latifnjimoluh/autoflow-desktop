@@ -7,6 +7,17 @@ platformdirs>=4.0
 APScheduler>=3.10
 opencv-python>=4.8
 pytesseract>=0.3.10
+packaging>=23.0
+# --- Lot 2 : automatisation réactive & pilotée par les données ---
+watchdog>=4.0          # surveillance fichiers/dossiers (déclencheurs)
+openpyxl>=3.1          # lecture/écriture Excel (.xlsx) ; CSV via csv (stdlib)
+cryptography>=42.0     # coffre de secrets chiffré (fichier local, aucun serveur)
+# HTTP : urllib (stdlib) — pas de dépendance ajoutée.
+# Windows uniquement (import paresseux, dégradation propre ailleurs) :
+#   pywinauto>=0.6  (ciblage d'éléments d'interface)
+#   pyttsx3>=2.90   (synthèse vocale hors-ligne)
+#   pycaw>=20240210 (volume Windows, optionnel)
+# Inactivité/session/volume de repli : ctypes (API Windows, stdlib).
 # sqlite3 et winreg sont inclus dans la bibliothèque standard de Python.
 
 # Dépendances de développement / tests

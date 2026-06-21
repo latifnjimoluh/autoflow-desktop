@@ -7,6 +7,23 @@ projet adopte le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Ajouté — Lot 2 (20 fonctionnalités)
+- **Déclencheurs événementiels** : fenêtre, fichier/dossier (`watchdog`),
+  presse-papiers, inactivité, webhook (serveur HTTP local) — démarrent un
+  workflow et injectent le contexte en variables.
+- **Données** : boucle « pour chaque » (liste/CSV/Excel/dossier), lecture/écriture
+  CSV & Excel (`openpyxl`), action HTTP/API (`urllib`), manipulation de texte
+  (regex…) et calcul mathématique sécurisé (AST), variables globales + coffre de
+  secrets chiffré (`cryptography`).
+- **Robustesse** : ciblage d'éléments d'interface (`pywinauto`), bloc try/erreur,
+  conditions composées ET/OU, file d'attente / exécution exclusive.
+- **Actions** : fichiers/dossiers, e-mail SMTP (pièce jointe), son & synthèse
+  vocale (`pyttsx3`), saisie utilisateur en cours d'exécution, alimentation /
+  volume (confirmation requise).
+- **Vue** : tableau de bord (statistiques, activité) et palette de commandes (Ctrl+K).
+- Format de workflow **étendu** (clé `triggers` optionnelle) avec compatibilité
+  ascendante stricte (anciens workflows toujours chargeables).
+
 ## [1.0.0] - 2026-06-21
 
 ### Ajouté

@@ -21,11 +21,16 @@ dependencies = [
     "opencv-python>=4.8",
     "pytesseract>=0.3.10",
     "packaging>=23.0",
+    "watchdog>=4.0",
+    "openpyxl>=3.1",
+    "cryptography>=42.0",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-mock>=3.12", "pytest-qt>=4.4", "ruff>=0.6", "mypy>=1.10"]
 packaging = ["pyinstaller>=6.0"]
+# Fonctions Windows optionnelles (import paresseux, dégradation propre ailleurs).
+windows = ["pywinauto>=0.6", "pyttsx3>=2.90"]
 
 [project.scripts]
 autoflow = "autoflow.main:main"

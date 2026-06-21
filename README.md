@@ -354,6 +354,42 @@ cohérent**, entre la toile à nœuds de **n8n** et le minimalisme de
 > **Captures** : `QT_QPA_PLATFORM=offscreen python scripts/capture_screens.py`
 > génère des aperçus des deux thèmes dans `docs/images/`.
 
+## ⚡ Lot 2 — automatisation réactive, données & robustesse (20 nouveautés)
+
+> **Aucun serveur ni Docker** : tout repose sur du **JSON**, **SQLite intégré**
+> et un **coffre de secrets chiffré localement** (`cryptography`). Chaque
+> nouveauté garde la philosophie no-code (configuration concrète, résumé en
+> langage naturel) et **étend** le format de workflow sans casser l'existant
+> (anciens workflows toujours chargeables — vérifié par test).
+
+**Déclencheurs événementiels** (bouton **⚡ Déclencheurs**) — un workflow démarre
+sur événement, en plus de la planification :
+- **Fenêtre** (apparition / fermeture / focus), **fichier/dossier** (`watchdog`),
+  **presse-papiers** (avec regex), **inactivité** (idle Windows), **webhook**
+  (serveur HTTP local). Le contexte (fichier, contenu, corps JSON…) est injecté
+  en variables dans le workflow.
+
+**Données (façon n8n)** :
+- **Boucle « pour chaque »** (liste/variable, lignes CSV/Excel, fichiers d'un
+  dossier) avec `item`/`index` ; **lire/écrire CSV & Excel** ; **requête HTTP/API**
+  (GET/POST/PUT/DELETE, extraction d'un champ JSON) ; **texte** (regex, découpe,
+  casse…) et **calcul** mathématique sécurisé ; **variables globales** + **coffre
+  de secrets** chiffré.
+
+**Robustesse & actions** :
+- **Ciblage d'éléments d'interface** Windows (`pywinauto`), **bloc try / en cas
+  d'erreur**, **conditions composées ET/OU**, **file d'attente / exécution
+  exclusive** ; actions **fichiers/dossiers**, **e-mail (SMTP)** avec pièce jointe,
+  **son & synthèse vocale** (`pyttsx3`), **saisie utilisateur** en cours
+  d'exécution, **alimentation/volume** (avec confirmation pour éteindre/redémarrer).
+
+**Vue** : **tableau de bord** (📊, statistiques, taux de succès, activité récente)
+et **palette de commandes** (**Ctrl+K**) pour lancer un workflow en deux frappes.
+
+> **Fonctions Windows** (ciblage UI, voix, contrôle système, inactivité) :
+> **dégradation propre** sur les autres OS (message clair, jamais de crash). Les
+> dépendances Windows optionnelles s'installent via `pip install -e ".[windows]"`.
+
 ## Licence
 
 Distribué sous licence **MIT** — voir [LICENSE](LICENSE).
