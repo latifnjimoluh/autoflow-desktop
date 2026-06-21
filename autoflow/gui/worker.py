@@ -20,7 +20,9 @@ class ExecutorWorker(QObject):
 
     def __init__(self, workflow: Workflow, inputs, windows,
                  continue_on_error: bool = True, settings=None,
-                 workflow_resolver=None, step_mode: bool = False) -> None:
+                 workflow_resolver=None, step_mode: bool = False,
+                 globals_store=None, secrets_vault=None,
+                 input_provider=None, initial_variables=None) -> None:
         super().__init__()
         self.executor = Executor(
             workflow,
@@ -35,6 +37,10 @@ class ExecutorWorker(QObject):
             settings=settings,
             workflow_resolver=workflow_resolver,
             step_mode=step_mode,
+            globals_store=globals_store,
+            secrets_vault=secrets_vault,
+            input_provider=input_provider,
+            initial_variables=initial_variables,
         )
 
     @Slot()

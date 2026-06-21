@@ -24,6 +24,12 @@ _DEFAULTS = {
     "active_profile": "Défaut",
     "onboarded": False,
     "check_updates": True,
+    # Réglages SMTP (action e-mail) — le mot de passe vit dans le coffre.
+    "smtp_host": "",
+    "smtp_port": 587,
+    "smtp_username": "",
+    "smtp_sender": "",
+    "smtp_use_tls": True,
 }
 
 
@@ -43,6 +49,11 @@ class Settings:
     active_profile: str = "Défaut"
     onboarded: bool = False
     check_updates: bool = True
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_sender: str = ""
+    smtp_use_tls: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         """Sérialise les réglages."""

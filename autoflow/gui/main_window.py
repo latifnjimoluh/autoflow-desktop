@@ -56,6 +56,8 @@ class MainWindow(QMainWindow):
 
     emergency_stop = Signal()
     trigger_workflow = Signal(str)
+    # Pont thread-safe pour la saisie utilisateur pendant l'exécution.
+    _input_requested = Signal(object)
 
     def __init__(self, autoload: bool = True) -> None:
         super().__init__()
@@ -83,6 +85,9 @@ class MainWindow(QMainWindow):
         self._wf_hotkeys = GlobalHotkeyManager()
         self._hotkey_started = False
         self._force_quit = False
+        self._globals = None
+        self._secrets = None
+        self._trigger_manager = None
 
         self._build_ui()
         self._build_toolbar()
@@ -275,9 +280,22 @@ class MainWindow(QMainWindow):
         act_history.triggered.connect(self._open_history)
         act_export_py = QAction(tr("export_py", lang), self)
         act_export_py.triggered.connect(self._export_python)
-        for act in (act_gallery, act_settings, act_history, act_export_py):
+        act_dashboard = QAction("📊 Tableau de bord", self)
+        act_dashboard.triggered.connect(self._open_dashboard)
+        act_triggers = QAction("⚡ Déclencheurs", self)
+        act_triggers.setToolTip("Configurer les déclencheurs événementiels du workflow")
+        act_triggers.triggered.connect(self._open_triggers)
+        for act in (act_dashboard, act_triggers, act_gallery, act_settings,
+                    act_history, act_export_py):
             toolbar.addAction(act)
         toolbar.addSeparator()
+
+        # Palette de commandes (Ctrl+K).
+        from PySide6.QtGui import QKeySequence
+        act_palette = QAction("Palette de commandes", self)
+        act_palette.setShortcut(QKeySequence("Ctrl+K"))
+        act_palette.triggered.connect(self._open_command_palette)
+        self.addAction(act_palette)
 
         act_theme = QAction(tr("toggle_theme", lang), self)
         act_theme.setToolTip("Basculer le thème clair / sombre")
@@ -320,6 +338,138 @@ class MainWindow(QMainWindow):
         from .about_dialog import AboutDialog
 
         AboutDialog(self).exec()
+
+    # ------------------------------------------------ tableau de bord & palette
+    def _open_dashboard(self) -> None:
+        """Ouvre le tableau de bord (statistiques, activité récente)."""
+        from PySide6.QtWidgets import QDialog, QVBoxLayout
+
+        from .dashboard import DashboardWidget
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Tableau de bord — AutoFlow")
+        dialog.resize(720, 540)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget = DashboardWidget(self.history, lambda: self.workflows, dialog)
+        widget.run_requested.connect(self._run_named_workflow)
+        widget.stop_requested.connect(self._stop)
+        layout.addWidget(widget)
+        dialog.exec()
+
+    def _open_command_palette(self) -> None:
+        """Ouvre la palette de commandes (Ctrl+K)."""
+        from .command_palette import CommandPalette, build_default_commands
+
+        commands = build_default_commands(self.workflows, self._run_named_workflow)
+        CommandPalette(commands, self).exec()
+
+    def _run_named_workflow(self, name: str) -> None:
+        """Sélectionne un workflow par nom et lance son exécution."""
+        for i, wf in enumerate(self.workflows):
+            if wf.name == name:
+                self.current_index = i
+                self._refresh_current()
+                self._start()
+                return
+
+    # ------------------------------------------------ stores & saisie (lot 2)
+    def _get_globals(self):
+        """Magasin de variables globales (créé à la demande)."""
+        if self._globals is None:
+            from ..core.global_vars import GlobalVariables
+            self._globals = GlobalVariables()
+        return self._globals
+
+    def _get_secrets(self):
+        """Coffre de secrets (créé à la demande)."""
+        if self._secrets is None:
+            from ..services.secrets import SecretVault
+            self._secrets = SecretVault()
+        return self._secrets
+
+    def _provide_user_input(self, request: dict):
+        """Fournisseur de saisie appelé depuis le thread d'exécution (bloquant).
+
+        Marshale la demande vers le thread d'interface via un signal, puis attend
+        la réponse (Event), afin d'afficher le dialogue Qt en toute sécurité.
+        """
+        import threading
+
+        holder = {"request": request, "event": threading.Event(), "result": None}
+        self._input_requested.emit(holder)
+        holder["event"].wait(timeout=300)  # garde-fou : 5 min
+        return holder["result"]
+
+    def _on_input_requested(self, holder: dict) -> None:
+        """Affiche le dialogue de saisie (thread interface) et libère l'attente."""
+        from PySide6.QtWidgets import QInputDialog
+
+        req = holder["request"]
+        kind = req.get("kind", "text")
+        prompt = req.get("prompt", "Saisie")
+        try:
+            if kind == "confirm":
+                res = QMessageBox.question(
+                    self, "AutoFlow", prompt) == QMessageBox.StandardButton.Yes
+            elif kind == "choice" and req.get("choices"):
+                value, ok = QInputDialog.getItem(
+                    self, "AutoFlow", prompt, req["choices"], 0, False)
+                res = value if ok else (req["choices"][0] if req["choices"] else "")
+            else:
+                value, ok = QInputDialog.getText(
+                    self, "AutoFlow", prompt, text=req.get("default", ""))
+                res = value if ok else req.get("default", "")
+            holder["result"] = res
+        finally:
+            holder["event"].set()
+
+    def _open_triggers(self) -> None:
+        """Configure les déclencheurs événementiels du workflow courant."""
+        from .triggers_dialog import TriggersDialog
+
+        wf = self._current()
+        if wf is None:
+            return
+        dialog = TriggersDialog(wf.triggers, self)
+        if dialog.exec():
+            wf.triggers = dialog.result_triggers()
+            self.log_console.append_log(
+                f"{len(wf.triggers)} déclencheur(s) configuré(s) pour « {wf.name} ».",
+                "info")
+            self._setup_triggers()
+
+    def _setup_triggers(self) -> None:
+        """(Re)construit et démarre les déclencheurs de tous les workflows."""
+        from ..core.triggers import trigger_from_dict
+        from ..core.triggers.manager import TriggerManager
+
+        if self._trigger_manager is None:
+            self._trigger_manager = TriggerManager(run_workflow=self._on_trigger_fired)
+        self._trigger_manager.clear()
+        count = 0
+        for wf in self.workflows:
+            for tdict in getattr(wf, "triggers", []):
+                try:
+                    trig = trigger_from_dict(tdict)
+                except Exception:  # noqa: BLE001
+                    continue
+                if hasattr(trig, "bind_backend"):
+                    trig.bind_backend(self.windows)
+                if hasattr(trig, "bind_clipboard"):
+                    from ..core.clipboard import ClipboardBackend
+                    trig.bind_clipboard(ClipboardBackend())
+                self._trigger_manager.add(wf.name, trig)
+                count += 1
+        if count:
+            started = self._trigger_manager.start()
+            self.log_console.append_log(
+                f"{started}/{count} déclencheur(s) actif(s).", "info")
+
+    def _on_trigger_fired(self, name: str, event) -> None:
+        """Démarre un workflow suite à un déclencheur (variables injectées)."""
+        self._pending_trigger_vars = dict(getattr(event, "variables", {}) or {})
+        self.trigger_workflow.emit(name)
 
     # ------------------------------------------------------ mises à jour
     def _start_update_check(self, manual: bool = False) -> None:
@@ -435,6 +585,7 @@ class MainWindow(QMainWindow):
         self.coord_picker.captured.connect(self._on_coordinates_captured)
         self.emergency_stop.connect(self._on_emergency_stop)
         self.trigger_workflow.connect(self._on_trigger_workflow)
+        self._input_requested.connect(self._on_input_requested)
 
     # ------------------------------------------------- gestion des workflows
     def _workflows_dir(self):
@@ -753,7 +904,12 @@ class MainWindow(QMainWindow):
         self._worker = ExecutorWorker(
             wf, self.inputs, self.windows, settings=self.settings,
             workflow_resolver=self._resolve_workflow,
-            step_mode=self.step_chk.isChecked())
+            step_mode=self.step_chk.isChecked(),
+            globals_store=self._get_globals(),
+            secrets_vault=self._get_secrets(),
+            input_provider=self._provide_user_input,
+            initial_variables=getattr(self, "_pending_trigger_vars", None))
+        self._pending_trigger_vars = None
         self._worker.moveToThread(self._thread)
         self._thread.started.connect(self._worker.run)
         self._worker.log.connect(self.log_console.append_log)
@@ -977,6 +1133,7 @@ class MainWindow(QMainWindow):
             self._hotkey_started = self._emergency.start()
             self._register_workflow_hotkeys()
             self._wf_hotkeys.restart()
+            self._setup_triggers()
         self._apply_theme()
         if not self.settings.onboarded:
             from PySide6.QtCore import QTimer
@@ -999,6 +1156,8 @@ class MainWindow(QMainWindow):
         self.coord_picker.stop()
         self._emergency.stop()
         self._wf_hotkeys.stop()
+        if self._trigger_manager is not None:
+            self._trigger_manager.stop()
         if self._worker is not None:
             self._worker.request_stop()
         if self._thread is not None:
