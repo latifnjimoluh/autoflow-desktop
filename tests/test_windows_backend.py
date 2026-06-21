@@ -71,7 +71,7 @@ def test_activate_propage_vraie_erreur(monkeypatch):
     win = FakeWindow("Cmder", fail=erreur)
     monkeypatch.setattr(wb, "_get_gw", lambda: make_gw([win]))
     backend = wb.WindowsBackend()
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match="Accès refusé"):
         backend.activate("Cmder")
 
 

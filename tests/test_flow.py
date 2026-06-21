@@ -122,7 +122,9 @@ def test_imbrication_condition_dans_boucle():
 # -- Sous-workflows -------------------------------------------------------
 def test_run_workflow_appelle_le_sous_workflow():
     sub = Workflow(name="Sous", actions=[sv("appel", "fait")])
-    resolver = lambda name: sub if name == "Sous" else None
+
+    def resolver(name):
+        return sub if name == "Sous" else None
     call = registry.create_action("run_workflow", params={"workflow_name": "Sous"})
     ex = run_workflow([call], resolver=resolver)
     assert ex.variables.get("appel") == "fait"
@@ -139,7 +141,9 @@ def test_run_workflow_recursion_bloquee():
     a_actions = [registry.create_action("run_workflow", params={"workflow_name": "Test"})]
     wf = Workflow(name="Test", schedule=Schedule(mode="run_once"), actions=a_actions)
     inputs, windows = MagicMock(), MagicMock()
-    resolver = lambda name: wf if name == "Test" else None
+
+    def resolver(name):
+        return wf if name == "Test" else None
     executor = Executor(wf, inputs, windows, sleep_func=lambda _s: None,
                         workflow_resolver=resolver)
     # Ne doit pas boucler indéfiniment.

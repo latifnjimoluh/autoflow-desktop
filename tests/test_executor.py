@@ -93,7 +93,7 @@ def test_exception_continue_par_defaut():
         FakeAction("a2", on_execute=lambda a: order.append(a.name)),
     ]
     logs = []
-    executor, _ = make_executor(actions, log=lambda m, l="info": logs.append((m, l)))
+    executor, _ = make_executor(actions, log=lambda m, lvl="info": logs.append((m, lvl)))
     executor.run()
     assert order == ["a0", "a1", "a2"]
     assert any(level == "error" for _m, level in logs)

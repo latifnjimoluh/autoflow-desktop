@@ -52,8 +52,12 @@ def _qobject_base():
 _QObject, _Signal = _qobject_base()
 
 
-class ThemeManager(_QObject):
-    """Gestionnaire central de thème, branché sur une ``QApplication``."""
+class ThemeManager(_QObject):  # type: ignore[misc,valid-type]
+    """Gestionnaire central de thème, branché sur une ``QApplication``.
+
+    La classe de base est résolue dynamiquement (``QObject`` si Qt est présent,
+    sinon un stub) afin de rester importable hors écran — d'où l'``ignore`` mypy.
+    """
 
     # Émis après chaque (ré)application : porte le nom du thème courant.
     theme_changed = _Signal(str) if callable(_Signal) else None

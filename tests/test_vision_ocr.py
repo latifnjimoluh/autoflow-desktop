@@ -58,7 +58,6 @@ def test_wait_for_pixel_trouve():
     inputs.pixel.return_value = (255, 255, 255)
     action = registry.create_action("wait_for_pixel", params={
         "x": 1, "y": 1, "color": "#ffffff", "tolerance": 0, "timeout": 1})
-    action_result = []
     wf = Workflow(name="T", schedule=Schedule(mode="run_once"), actions=[action])
     ex = Executor(wf, inputs, MagicMock(), sleep_func=lambda _s: None)
     ex.run()
@@ -68,7 +67,6 @@ def test_wait_for_pixel_trouve():
 def test_read_text_degrade_si_tesseract_absent():
     ocr = MagicMock()
     ocr.is_available.return_value = False
-    messages = []
     action = registry.create_action("read_text", params={"var_name": "txt"})
     ex = run_workflow([action], ocr=ocr)
     # Aucune exception, variable vide, et aucun appel à read_region.
