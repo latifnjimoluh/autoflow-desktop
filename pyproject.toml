@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "autoflow-desktop"
-version = "0.1.0"
+dynamic = ["version"]
 description = "AutoFlow — outil visuel d'automatisation du PC (clics, frappes, séquences planifiées)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -20,14 +20,18 @@ dependencies = [
     "APScheduler>=3.10",
     "opencv-python>=4.8",
     "pytesseract>=0.3.10",
+    "packaging>=23.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-mock>=3.12", "pytest-qt>=4.4"]
+dev = ["pytest>=8.0", "pytest-mock>=3.12", "pytest-qt>=4.4", "ruff>=0.6", "mypy>=1.10"]
 packaging = ["pyinstaller>=6.0"]
 
 [project.scripts]
 autoflow = "autoflow.main:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "autoflow.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["autoflow*"]
@@ -38,3 +42,19 @@ addopts = "-ra"
 
 [tool.coverage.run]
 source = ["autoflow/core"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["build", "dist", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501", "B008"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = false
+no_implicit_optional = true
+exclude = ["build/", "dist/", "tests/"]

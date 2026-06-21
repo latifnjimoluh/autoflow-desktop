@@ -20,10 +20,10 @@ REPO_URL = "https://github.com/latifnjimoluh/autoflow-desktop"
 
 
 def _version() -> str:
-    """Renvoie la version du paquet (repli ``0.0.0`` si indisponible)."""
+    """Renvoie la version du paquet (source unique : ``autoflow.__version__``)."""
     try:
-        from importlib.metadata import version
-        return version("autoflow")
+        from autoflow import __version__
+        return __version__
     except Exception:  # noqa: BLE001
         return "1.0.0"
 
