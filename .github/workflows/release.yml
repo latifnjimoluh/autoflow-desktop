@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  push:
+    # Tout push sur main : le job « check » décide s'il faut publier
+    # (uniquement si __version__ a augmenté). Un tag vX.Y.Z poussé
+    # manuellement publie aussi directement.
+    branches: [main]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # ----------------------------------------------------------------------
+  # 1) Détecte si __version__ a augmenté par rapport au dernier tag publié.
+  # ----------------------------------------------------------------------
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.detect.outputs.version }}
+      should_release: ${{ steps.detect.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # nécessaire pour lire tous les tags
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Détecter le bump de version
+        id: detect
+        run: |
+          python - <<'PY'
+          import os, re, subprocess, sys
+          from packaging.version import Version, InvalidVersion
+
+          # Version courante = source unique de vérité.
+          text = open("autoflow/__init__.py", encoding="utf-8").read()
+          current = re.search(r'__version__\s*=\s*"([^"]+)"', text).group(1)
+
+          # Plus haut tag vX.Y.Z déjà publié.
+          tags = subprocess.run(["git", "tag"], capture_output=True, text=True).stdout.split()
+          versions = []
+          for t in tags:
+              try:
+                  versions.append(Version(t.lstrip("vV")))
+              except InvalidVersion:
+                  pass
+          latest = max(versions) if versions else None
+
+          ref = os.environ.get("GITHUB_REF", "")
+          if ref.startswith("refs/tags/"):       # déclenché par un tag
+              version = ref.split("/")[-1].lstrip("vV")
+              should = "true"
+          else:                                    # push sur main
+              version = current
+              should = "true" if (latest is None or Version(current) > latest) else "false"
+
+          sys.stderr.write(f"courante={current} dernier_tag={latest} -> publier={should}\n")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"version={version}\n")
+              fh.write(f"should_release={should}\n")
+          PY
+
+  # ----------------------------------------------------------------------
+  # 2) Build Windows + publication de la Release (si bump détecté).
+  # ----------------------------------------------------------------------
+  build-windows:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[packaging]"
+
+      - name: Générer l'icône
+        run: python scripts/make_icon.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+        continue-on-error: true
+
+      - name: Build PyInstaller (.exe)
+        working-directory: packaging
+        run: pyinstaller --noconfirm --clean autoflow.spec
+
+      - name: Empaqueter (zip) et checksums
+        shell: pwsh
+        run: |
+          $version = "${{ needs.check.outputs.version }}"
+          $dist = "packaging/dist/AutoFlow"
+          $zip = "AutoFlow-$version-windows-x64.zip"
+          Compress-Archive -Path "$dist/*" -DestinationPath $zip -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+          "$hash  $zip" | Out-File -Encoding ascii "$zip.sha256"
+          "ARTIFACT=$zip" | Out-File -Append -Encoding ascii $env:GITHUB_ENV
+
+      - name: Notes de version
+        shell: pwsh
+        run: |
+          $notes = "release-notes.md"
+          if (Test-Path CHANGELOG.md) {
+            Copy-Item CHANGELOG.md $notes
+          } else {
+            "AutoFlow ${{ needs.check.outputs.version }}" | Out-File -Encoding utf8 $notes
+          }
+
+      - name: Publier la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check.outputs.version }}
+          name: AutoFlow v${{ needs.check.outputs.version }}
+          body_path: release-notes.md
+          files: |
+            ${{ env.ARTIFACT }}
+            ${{ env.ARTIFACT }}.sha256
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
