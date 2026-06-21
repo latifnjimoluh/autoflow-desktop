@@ -86,24 +86,32 @@ class Workflow:
     description: str = ""
     schedule: Schedule = field(default_factory=Schedule)
     actions: list[Action] = field(default_factory=list)
+    # Déclencheurs événementiels (lot 2). Stockés en dictionnaires bruts pour
+    # garder le modèle découplé du registre de déclencheurs ; n'est sérialisé que
+    # s'il est non vide (compatibilité ascendante stricte).
+    triggers: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Sérialise le workflow complet en dictionnaire JSON-compatible."""
-        return {
+        data: dict[str, Any] = {
             "name": self.name,
             "description": self.description,
             "schedule": self.schedule.to_dict(),
             "actions": [action.to_dict() for action in self.actions],
         }
+        if self.triggers:
+            data["triggers"] = [dict(t) for t in self.triggers]
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Workflow:
-        """Reconstruit un workflow depuis un dictionnaire."""
+        """Reconstruit un workflow depuis un dictionnaire (tolère l'absence de triggers)."""
         return cls(
             name=str(data.get("name", "Nouveau workflow")),
             description=str(data.get("description", "")),
             schedule=Schedule.from_dict(data.get("schedule")),
             actions=[action_from_dict(a) for a in data.get("actions", [])],
+            triggers=[dict(t) for t in data.get("triggers", [])],
         )
 
     def enabled_actions(self) -> list[Action]:

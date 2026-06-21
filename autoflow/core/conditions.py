@@ -59,6 +59,21 @@ def evaluate(params: dict[str, Any], inputs: Any, windows: Any,
     raise ValueError(f"Test de condition inconnu : {test!r}")
 
 
+def evaluate_all(conditions: list[dict[str, Any]], logic: str, inputs: Any,
+                 windows: Any, context: dict[str, Any]) -> bool:
+    """Évalue une liste de tests avec une logique ``AND``/``OR`` (groupes ET/OU).
+
+    Une liste vide est considérée vraie (aucune contrainte). Chaque entrée est un
+    dictionnaire de paramètres comme attendu par :func:`evaluate`.
+    """
+    if not conditions:
+        return True
+    results = (evaluate(cond, inputs, windows, context) for cond in conditions)
+    if str(logic).upper() == "OR":
+        return any(results)
+    return all(results)
+
+
 def _image_present(params, inputs, context, resolve) -> bool:
     path = str(resolve(params.get("image_path", "")))
     confidence = float(params.get("confidence", 0.8))

@@ -67,6 +67,24 @@ class WindowsBackend:
                 results.append(window)
         return results
 
+    def list_titles(self) -> list[str]:
+        """Renvoie les titres de toutes les fenêtres ouvertes (déclencheurs)."""
+        try:
+            gw = _get_gw()
+            return [getattr(w, "title", "") or "" for w in gw.getAllWindows()
+                    if getattr(w, "title", "")]
+        except Exception:  # noqa: BLE001 — pas d'environnement fenêtré
+            return []
+
+    def active_title(self) -> str:
+        """Renvoie le titre de la fenêtre active (vide si indisponible)."""
+        try:
+            gw = _get_gw()
+            window = gw.getActiveWindow()
+            return (getattr(window, "title", "") or "") if window else ""
+        except Exception:  # noqa: BLE001
+            return ""
+
     # -- Activation --------------------------------------------------------
     def activate(self, title: str, match: str = "contains",
                  force_foreground: bool = False) -> bool:

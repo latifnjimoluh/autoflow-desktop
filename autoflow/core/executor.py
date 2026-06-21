@@ -61,6 +61,10 @@ class Executor:
         workflow_resolver: Callable[[str], Workflow | None] | None = None,
         step_mode: bool = False,
         rng: random.Random | None = None,
+        globals_store: Any = None,
+        secrets_vault: Any = None,
+        input_provider: Callable[[dict], Any] | None = None,
+        initial_variables: dict[str, Any] | None = None,
     ) -> None:
         self.workflow = workflow
         self.inputs = inputs
@@ -75,6 +79,10 @@ class Executor:
         self.workflow_resolver = workflow_resolver
         self.step_mode = step_mode
         self._rng = rng or random.Random()
+        self.globals_store = globals_store
+        self.secrets_vault = secrets_vault
+        self.input_provider = input_provider
+        self.initial_variables = dict(initial_variables or {})
 
         self._stop = threading.Event()
         self._pause = threading.Event()
@@ -152,7 +160,7 @@ class Executor:
         self._pause.clear()
         self._step.clear()
         self.iterations_done = 0
-        self.variables = VariableStore()
+        self.variables = VariableStore(initial=self.initial_variables)
         self._status_cb("running")
         self._log(f"Démarrage du workflow « {self.workflow.name} ».", "info")
 
@@ -202,8 +210,13 @@ class Executor:
             "clipboard": ClipboardBackend(),
             "workflow_resolver": self.workflow_resolver,
             "call_stack": self.call_stack,
+            "globals": self.globals_store,
+            "secrets": self.secrets_vault,
+            "input_provider": self.input_provider,
         }
         context["run_actions"] = lambda actions: self.run_sequence(actions, context)
+        context["run_actions_catching"] = (
+            lambda actions: self.run_actions_catching(actions, context))
         return context
 
     def run_sequence(self, actions: list[Any], context: dict[str, Any]) -> None:
@@ -225,7 +238,21 @@ class Executor:
             self._sleep_after(action)
 
     def _execute_with_policy(self, action: Any, context: dict[str, Any]) -> None:
-        """Exécute une action en appliquant ré-essais et politique d'échec."""
+        """Exécute une action (ré-essais) puis applique la politique d'échec."""
+        try:
+            self._attempt(action, context)
+        except StopRequested:
+            raise
+        except Exception as exc:  # noqa: BLE001 - politique d'erreur explicite
+            self._log(f"Erreur sur « {_summary(action)} » : {exc}", "error")
+            self._apply_failure_policy(action)
+
+    def _attempt(self, action: Any, context: dict[str, Any]) -> None:
+        """Exécute une action avec ses ré-essais ; **relève** l'échec final.
+
+        Utilisé tel quel par le bloc try/erreur (qui veut intercepter l'échec) et
+        enveloppé par :meth:`_execute_with_policy` (qui applique continue/stop).
+        """
         attempts = int(getattr(action, "retries", 0) or 0) + 1
         retry_delay = float(getattr(action, "retry_delay", 0.0) or 0.0)
         for attempt in range(1, attempts + 1):
@@ -234,7 +261,7 @@ class Executor:
                 return
             except StopRequested:
                 raise
-            except Exception as exc:  # noqa: BLE001 - politique d'erreur explicite
+            except Exception as exc:  # noqa: BLE001
                 if type(exc).__name__ == "FailSafeException":
                     self._log("Failsafe déclenché : arrêt d'urgence.", "error")
                     raise StopRequested from exc
@@ -245,9 +272,33 @@ class Executor:
                     if retry_delay > 0:
                         self._sleep(retry_delay)
                     continue
-                self._log(f"Erreur sur « {_summary(action)} » : {exc}", "error")
-                self._apply_failure_policy(action)
-                return
+                raise
+
+    def run_actions_catching(self, actions: list[Any],
+                             context: dict[str, Any]) -> Exception | None:
+        """Exécute une séquence en **interceptant** la première erreur.
+
+        Renvoie l'exception capturée (ou ``None`` si tout réussit). Sert au bloc
+        *try / en cas d'erreur* ; l'arrêt utilisateur (``StopRequested``) reste
+        propagé.
+        """
+        for action in actions:
+            if self.is_stopped():
+                raise StopRequested
+            self._wait_while_paused()
+            if not getattr(action, "enabled", True):
+                continue
+            self._wait_step(action)
+            self._action_cb(action, context["iteration"])
+            self._log(f"→ {_summary(action)}", "action")
+            try:
+                self._attempt(action, context)
+            except StopRequested:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                return exc
+            self._sleep_after(action)
+        return None
 
     def _apply_failure_policy(self, action: Any) -> None:
         """Applique le comportement en cas d'échec définitif d'une action."""
