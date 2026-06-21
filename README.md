@@ -1,9 +1,44 @@
 # AutoFlow
 
+[![CI](https://github.com/latifnjimoluh/autoflow-desktop/actions/workflows/ci.yml/badge.svg)](https://github.com/latifnjimoluh/autoflow-desktop/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/latifnjimoluh/autoflow-desktop?sort=semver)](https://github.com/latifnjimoluh/autoflow-desktop/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/latifnjimoluh/autoflow-desktop/total)](https://github.com/latifnjimoluh/autoflow-desktop/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **AutoFlow** est une application desktop d'automatisation visuelle du PC. Elle
 permet à un utilisateur **non-programmeur** de composer des **séquences
 d'actions** (clics, frappes clavier, raccourcis, gestion de fenêtres, attentes…)
 et de les **planifier**, sans écrire la moindre ligne de code.
+
+## ⬇️ Télécharger
+
+Récupérez la **dernière version** depuis la page des Releases :
+
+➡️ **[Télécharger AutoFlow pour Windows](https://github.com/latifnjimoluh/autoflow-desktop/releases/latest)**
+
+Téléchargez l'archive `AutoFlow-<version>-windows-x64.zip`, décompressez-la et
+lancez `AutoFlow.exe`. Un fichier `.sha256` accompagne chaque artefact pour
+vérifier l'intégrité.
+
+> **Avertissement SmartScreen** : l'exécutable n'étant pas signé (la signature de
+> code requiert un certificat payant), Windows peut afficher un écran
+> « Windows a protégé votre ordinateur ». Cliquez **Informations complémentaires →
+> Exécuter quand même**. La signature reste une option documentée, non activée.
+
+## 🔄 Mises à jour intégrées
+
+AutoFlow vérifie automatiquement les nouvelles versions :
+
+- **Au démarrage** (en arrière-plan, sans bloquer l'interface) si l'option
+  *« Vérifier les mises à jour au démarrage »* est activée dans **⚙ Réglages**.
+- **À la demande** via le bouton **🔄 Mises à jour** de la barre d'outils.
+
+Quand une version plus récente est publiée, une boîte de dialogue présente la
+version et ses **notes** avec deux choix : **Télécharger** (ouvre l'asset de la
+Release) ou **Installer et redémarrer** (télécharge puis lance l'installeur et
+quitte l'app — un `.exe` en cours d'exécution ne pouvant pas être écrasé). La
+vérification interroge l'API GitHub via la bibliothèque standard et gère
+proprement l'absence de réseau, la limite de débit et les réponses malformées.
 
 C'est la généralisation visuelle et extensible de deux scripts d'origine :
 
@@ -133,12 +168,31 @@ ainsi qu'un **smoke test GUI** en mode `offscreen`.
 
 ## Packaging (optionnel)
 
-Pour produire un exécutable Windows :
+Pour produire un exécutable Windows à partir du spec versionné :
 
 ```powershell
-pip install pyinstaller
-pyinstaller --noconfirm --windowed --name AutoFlow -p . autoflow/main.py
+pip install -e ".[packaging]"
+python scripts/make_icon.py        # génère packaging/app.ico (optionnel)
+cd packaging
+pyinstaller --noconfirm --clean autoflow.spec
+# -> dist/AutoFlow/AutoFlow.exe (+ ressources embarquées)
 ```
+
+## 📦 Publier une nouvelle version (mainteneurs)
+
+La publication est **automatisée** par GitHub Actions :
+
+1. Bumpez la version dans `autoflow/__init__.py` (`__version__`, **source unique
+   de vérité** — `pyproject.toml` la lit dynamiquement) et ajoutez une entrée
+   dans `CHANGELOG.md`.
+2. Committez et **poussez sur `main`**. Le workflow `release.yml` compare
+   `__version__` au dernier tag : **si la version a augmenté**, il construit
+   l'`.exe` sur `windows-latest`, calcule les checksums, **pose le tag
+   `v{version}`** et **publie la Release** avec l'archive téléchargeable.
+3. Alternative : poussez un tag `vX.Y.Z` manuellement pour forcer une Release.
+
+À chaque `push`/`pull_request` sur `main`, `ci.yml` exécute la suite de tests
+(Python 3.11/3.12, mode offscreen) + lint/type-check.
 
 ---
 

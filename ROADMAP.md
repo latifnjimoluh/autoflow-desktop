@@ -314,3 +314,75 @@ fenêtre « À propos ». `palette()` suit le thème courant (bascule à chaud).
 3. **Captures d'écran** générables à la demande via `scripts/capture_screens.py`
    (rendu avec les polices système ; l'environnement headless affiche des
    rectangles à la place des glyphes, sans incidence sur le rendu réel).
+
+---
+
+## 10. Livraison & mises à jour v5 — Releases auto, CI/CD & updater intégré
+
+> **Objectif :** une **chaîne de livraison** complète — intégration continue,
+> **publication automatique de Releases GitHub** avec l'`.exe` téléchargeable,
+> et un **système de mise à jour intégré** à l'application (vérification au
+> démarrage + manuelle, dialogue, télécharger/installer).
+
+### 10.1 Versionnement (source unique de vérité)
+
+- **SemVer** `MAJEUR.MINEUR.CORRECTIF`. Version cible initiale : **`1.0.0`**.
+- **Une seule source** : `autoflow/__init__.py` → `__version__`. `pyproject.toml`
+  la lit en **dynamique** (`[tool.setuptools.dynamic]`). L'app et l'updater lisent
+  `autoflow.__version__`.
+- Comparaisons via **`packaging.version.Version`** (gère pré-versions, ordre correct).
+- **`GITHUB_REPO`** déduit automatiquement de `git remote get-url origin`
+  (`autoflow/services/version.py` → `github_repo()`), repli sur la constante connue
+  `latifnjimoluh/autoflow-desktop`.
+
+### 10.2 Empaquetage Windows (PyInstaller)
+
+- `packaging/autoflow.spec` empaquette `main.py` en **one-folder** `AutoFlow`
+  (+ `AutoFlow.exe`), embarque `examples/`, le **paquet de ressources UI**
+  (`autoflow/ui` : polices, `logo.svg`, QSS générés à la volée) et configure
+  l'**icône** (`packaging/app.ico`, dérivée du logo si Pillow présent).
+- **Compilation croisée impossible** : le vrai `.exe` Windows est produit par le
+  runner **`windows-latest`** (CI). En bac à sable Linux : **build de validation**
+  uniquement (la spec s'analyse et empaquette sans erreur pour l'OS courant).
+
+### 10.3 Mise à jour intégrée — `autoflow/services/updater.py`
+
+- **Vérification** via l'API Releases GitHub
+  (`/repos/{repo}/releases/latest`) en **stdlib `urllib`** (aucune dépendance
+  réseau ajoutée), `opener` **injectable** ⇒ entièrement mockable/testé.
+- `is_update_available(courante, derniere)` via `packaging.version`.
+- **Robustesse** : réseau absent, **rate-limit** GitHub, JSON malformé, Release
+  **sans asset**, **pré-versions** ignorées — toujours **sans crash**, message clair.
+- **GUI** : `UpdateChecker` (QThread non bloquant) au démarrage **si activé** +
+  bouton **« 🔄 Mises à jour »** (manuel). Dialogue soigné : nouvelle version +
+  **notes**, boutons **Télécharger** (ouvre l'asset/Release) et **Installer**
+  (télécharge puis lance et quitte l'app — un `.exe` en cours ne peut s'écraser).
+- **Réglage** persistant : **« Vérifier les mises à jour au démarrage »**
+  (`Settings.check_updates`, défaut `True`).
+
+### 10.4 GitHub Actions
+
+- **`ci.yml`** : `push`/`pull_request` sur `main`, `ubuntu-latest`, matrice
+  Python **3.11/3.12**, libs Qt offscreen (`libegl1`, `libxkbcommon0`…),
+  `QT_QPA_PLATFORM=offscreen` ⇒ **ruff** + **mypy** (best-effort) + **`pytest`**.
+- **`release.yml`** : sur `push` `main`, un job **compare `__version__` au dernier
+  tag** ; **si la version a augmenté**, build sur **`windows-latest`** (PyInstaller →
+  `.exe`/zip + **SHA256**), **pose le tag `v{version}`** et **publie la Release**
+  via `softprops/action-gh-release@v2` (artefacts + checksums + notes du CHANGELOG).
+  Déclenchement **tag `v*.*.*`** également supporté. `permissions: contents: write`.
+
+### 10.5 Definition of Done & tests
+
+`tests/test_updater.py` : version plus récente (→ maj), identique (→ à jour),
+**erreur réseau**, **JSON malformé**, **Release sans asset**, pré-version ignorée,
+comparaison de versions, `github_repo()` parsé depuis diverses URL de remote,
+dialogue de maj construit en offscreen. **Aucun test ne touche le réseau réel.**
+
+### 10.6 Hypothèses v5
+
+1. **`.exe` produit par la CI** (Windows), pas dans le bac à sable Linux.
+2. **Build non signé** ⇒ avertissement **SmartScreen** (signature = certificat
+   payant, laissée en option documentée).
+3. **`GITHUB_REPO`** : déduit du remote, repli sur `latifnjimoluh/autoflow-desktop`.
+4. **Installeur Inno Setup** conservé en option ; l'`.exe`/zip reste l'artefact
+   principal téléchargeable.
