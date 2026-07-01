@@ -7,6 +7,8 @@ projet adopte le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [1.1.0] - 2026-06-21
+
 ### Ajouté — Lot 2 (20 fonctionnalités)
 - **Déclencheurs événementiels** : fenêtre, fichier/dossier (`watchdog`),
   presse-papiers, inactivité, webhook (serveur HTTP local) — démarrent un
@@ -46,5 +48,6 @@ projet adopte le [versionnement sémantique](https://semver.org/lang/fr/).
   export Python, expérience no-code « façon n8n » (palette, nœuds, assistant),
   configuration concrète des actions et galerie de modèles.
 
-[Non publié]: https://github.com/latifnjimoluh/autoflow-desktop/compare/v1.0.0...HEAD
+[Non publié]: https://github.com/latifnjimoluh/autoflow-desktop/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/latifnjimoluh/autoflow-desktop/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/latifnjimoluh/autoflow-desktop/releases/tag/v1.0.0
